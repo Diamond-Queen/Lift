@@ -1,150 +1,206 @@
-/* Container for the entire page */
+/* =================== Global Container =================== */
 .container {
-  padding: 1.5rem;
-  max-width: 42rem;
-  margin-left: auto;
-  margin-right: auto;
+  padding: 2rem;
+  max-width: 48rem;
+  margin: 0 auto;
+  font-family: 'Inter', 'Helvetica', sans-serif;
+  background: #f9f9f9;
 }
 
-/* Page title */
 .pageTitle {
-  font-size: 1.75rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  color: var(--muted);
-  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #333;
+  text-align: center;
+  margin-bottom: 2rem;
 }
 
-/* Inputs and selects */
+/* =================== Form Inputs =================== */
 .input {
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: 10px;
-  padding: 0.75rem;
-  margin-bottom: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
   font-size: 1rem;
   box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--muted);
+  background: #fff;
+  color: #111;
+  transition: border 0.2s, box-shadow 0.2s;
 }
 
-/* Textareas */
+.input:focus {
+  border-color: #6a5af9;
+  box-shadow: 0 0 0 2px rgba(106, 90, 249, 0.2);
+  outline: none;
+}
+
 .textarea {
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: 10px;
-  padding: 0.9rem;
-  margin-bottom: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
   font-size: 1rem;
   box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--muted);
-  resize: vertical;
+  background: #fff;
+  color: #111;
+  transition: border 0.2s, box-shadow 0.2s;
 }
 
-/* Buttons */
+.textarea:focus {
+  border-color: #6a5af9;
+  box-shadow: 0 0 0 2px rgba(106, 90, 249, 0.2);
+  outline: none;
+}
+
+select {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  box-sizing: border-box;
+  background: #fff;
+  color: #111;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+select:focus {
+  border-color: #6a5af9;
+  box-shadow: 0 0 0 2px rgba(106, 90, 249, 0.2);
+  outline: none;
+}
+
+/* =================== Buttons =================== */
 .btnAction {
-  display: inline-block;
-  padding: var(--btn-padding-vert, 0.75rem) var(--btn-padding-horiz, 1.5rem);
-  border-radius: var(--btn-radius, 10px);
+  padding: 0.9rem 1.5rem;
   font-weight: 700;
-  color: var(--accent-contrast, #fff);
-  text-decoration: none;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(2, 6, 23, 0.12);
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
+  font-size: 1rem;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .btnPurple {
-  background: linear-gradient(90deg, var(--accent, #6c63ff) 0%, #b8871f 100%);
-  color: var(--accent-contrast, #fff);
+  background: linear-gradient(90deg,#6a5af9,#b8871f);
+  color: #fff;
 }
 
 .btnAction:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.28);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
 
-/* Error messages */
-.error {
-  color: crimson;
-  margin-top: 8px;
-}
-
-/* Result card */
-.resultCard {
-  margin-top: 1.25rem;
-  padding: 1.25rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-  color: var(--muted);
-  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.2);
-}
-
-/* Loading state */
 .loading {
-  opacity: 0.85;
+  opacity: 0.7;
   cursor: progress;
 }
 
-/* Printable resume / cover letter */
-.printableResume,
-.printableCover {
-  margin-top: 1rem;
-  padding: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.03);
+.error {
+  color: crimson;
+  margin-top: 0.5rem;
+}
+
+/* =================== Result Card =================== */
+.resultCard {
+  margin-top: 2rem;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+/* =================== Printable Resume =================== */
+.printableResume {
+  background: #fff;
+  padding: 2rem 2.5rem;
+  color: #111;
+  line-height: 1.5;
+  font-size: 11pt;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.02);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.08);
 }
 
 .printableResume h1 {
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
+  font-size: 28pt;
+  font-weight: 900;
+  margin-bottom: 0.3rem;
+  color: #1a1a1a;
 }
 
-.printableResume p,
-.printableCover p {
-  margin-bottom: 0.5rem;
+.printableResume .contact {
+  font-size: 10pt;
+  color: #555;
+  margin-bottom: 1rem;
 }
 
 .printableResume h2 {
-  margin-top: 1rem;
+  font-size: 14pt;
+  margin-top: 1.5rem;
   margin-bottom: 0.5rem;
-  font-size: 1.2rem;
+  border-bottom: 2px solid #6a5af9;
+  padding-bottom: 2px;
+  color: #6a5af9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-/* Section titles */
-.sectionTitle {
+.sectionItem {
+  margin-bottom: 0.5rem;
+}
+
+.sectionItem strong {
   font-weight: 600;
-  margin-top: 1rem;
-  margin-bottom: 0.5rem;
 }
 
-/* Print button */
+.skillsCertsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.skillsCertsContainer p {
+  flex: 1 1 45%;
+  background: #eae8ff;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 10pt;
+}
+
+/* =================== Cover Letter =================== */
+.printableCover {
+  padding: 2rem;
+  font-size: 12pt;
+  line-height: 1.6;
+  color: #111;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+}
+
+.printableCover p {
+  margin-bottom: 0.8rem;
+}
+
+/* Print Button */
 .printBtn {
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  background: var(--accent, #6c63ff);
+  margin-top: 1.5rem;
+  padding: 0.6rem 1.2rem;
+  background: #6a5af9;
   color: #fff;
-  font-weight: 600;
-  cursor: pointer;
   border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
 }
 
-.printBtn:hover {
-  opacity: 0.9;
-}
-
-/* Job/education entries */
-.job {
-  margin-bottom: 0.5rem;
-}
-
-/* Muted text helper */
-.muted {
-  opacity: 0.95;
+/* =================== Print Media =================== */
+@media print {
+  body * { visibility: hidden; }
+  .printableResume, .printableCover, .printableResume *, .printableCover * { visibility: visible; }
+  .printableResume, .printableCover { position: absolute; top: 0; left: 0; width: 100%; }
+  .printBtn { display: none; }
 }
