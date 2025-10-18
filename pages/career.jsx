@@ -185,45 +185,42 @@ export default function Career() {
             </div>
           )}
 
-      {type === "cover" && result && (
-        <div className={styles.printableCover}>
-          {/* === Letterhead === */}
-          <div className={styles.letterhead}>
-            <h1 className={styles.letterName}>{result.name || name}</h1>
-            <div className={styles.contactRow}>
-              {(result.email || email) && <span>{result.email || email}</span>}
-              {(result.phone || phone) && <span>• {result.phone || phone}</span>}
-              {(result.address || address) && <span>• {result.address || address}</span>}
+        {type === "cover" && result && (
+          <div className={styles.printableCover}>
+            {/* === Letterhead === */}
+            <div className={styles.letterhead}>
+              <h1 className={styles.letterName}>{result.name || name}</h1>
+              <div className={styles.contactRow}>
+                {(result.email || email) && <span>{result.email || email}</span>}
+                {(result.phone || phone) && <span>• {result.phone || phone}</span>}
+                {(result.address || address) && <span>• {result.address || address}</span>}
+              </div>
+            </div>
+
+            {/* === Letter Body === */}
+            <div className={styles.letterBody}>
+              <p className={styles.date}>{new Date().toLocaleDateString()}</p>
+
+              {(result.recipient || recipient) && (
+                <p className={styles.recipient}>{result.recipient || recipient}</p>
+              )}
+
+              <p>Dear {(result.recipient || recipient) || "Hiring Manager"},</p>
+
+              {/* Always make paragraphs an array */}
+              {result.paragraphs
+                ? (Array.isArray(result.paragraphs) 
+                    ? result.paragraphs 
+                    : [result.paragraphs]
+                  ).map((para, i) => <p key={i}>{para}</p>)
+                : (paragraphs ? [paragraphs] : []).map((para, i) => <p key={i}>{para}</p>)
+              }
+
+              <p>Sincerely,</p>
+              <p><strong>{result.name || name}</strong></p>
             </div>
           </div>
-
-          {/* === Body === */}
-          <div className={styles.letterBody}>
-            <p className={styles.date}>{new Date().toLocaleDateString()}</p>
-
-            {(result.recipient || recipient) && (
-              <p className={styles.recipient}>{result.recipient || recipient}</p>
-            )}
-
-            <p>Dear {(result.recipient || recipient) || "Hiring Manager"},</p>
-
-            {/* Handle both string or array paragraphs */}
-            {Array.isArray(result.paragraphs)
-              ? result.paragraphs.map((para, i) => (
-                  <p key={i}>{para}</p>
-                ))
-              : result.paragraphs && <p>{result.paragraphs}</p>}
-
-            <p>Sincerely,</p>
-            <p><strong>{result.name || name}</strong></p>
-
-            <div className={styles.footerContact}>
-              {(result.email || email) && <span>{result.email || email}</span>}
-              {(result.phone || phone) && <span>• {result.phone || phone}</span>}
-            </div>
-          </div>
-        </div>
-      )}
+        )}
 
 
 
