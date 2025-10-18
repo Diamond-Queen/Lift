@@ -12,10 +12,12 @@ export default function Career() {
 
   const handleGenerate = async () => {
     setError("");
+    setResult("");
     if (!name.trim()) {
       setError("Please enter your name.");
       return;
     }
+
     setLoading(true);
     try {
       const res = await fetch("/api/career", {
@@ -23,70 +25,76 @@ export default function Career() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, experience, skills, type }),
       });
+
+      if (!res.ok) throw new Error("Network response was not ok");
+
       const data = await res.json();
-      setResult(data.result || "");
+      setResult(data.result || data.output || "No output returned.");
     } catch (err) {
-      setError("Failed to generate. Try again.");
+      console.error(err);
+      setError("Failed to generate. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleNameChange = useCallback((e) => setName(e.target.value), []);
-  const handleExperienceChange = useCallback((e) => setExperience(e.target.value), []);
-  const handleSkillsChange = useCallback((e) => setSkills(e.target.value), []);
-  const handleTypeChange = useCallback((e) => setType(e.target.value), []);
-
   return (
     <div className={styles.container}>
       <h1 className={styles.pageTitle}>Lift Career</h1>
+
       <input
         type="text"
         placeholder="Name"
         className={styles.input}
         value={name}
-        onChange={handleNameChange}
+        onChange={useCallback((e) => setName(e.target.value), [])}
         disabled={loading}
       />
+
       <textarea
         placeholder="Experience"
         className={styles.textarea}
         rows={3}
         value={experience}
-        onChange={handleExperienceChange}
+        onChange={useCallback((e) => setExperience(e.target.value), [])}
         disabled={loading}
       />
+
       <textarea
         placeholder="Skills"
         className={styles.textarea}
         rows={3}
         value={skills}
-        onChange={handleSkillsChange}
+        onChange={useCallback((e) => setSkills(e.target.value), [])}
         disabled={loading}
       />
+
       <select
         className={styles.input}
         value={type}
-        onChange={handleTypeChange}
+        onChange={useCallback((e) => setType(e.target.value), [])}
         disabled={loading}
       >
         <option value="resume">Resume</option>
-  <option value="cover">Cover Letter</option>
+        <option value="cover">Cover Letter</option>
       </select>
+
       <button
-        className={`${styles.btnAction} ${styles.btnPurple} ${loading ? styles.loading : ''}`}
+        className={`${styles.btnAction} ${styles.btnPurple} ${
+          loading ? styles.loading : ""
+        }`}
         onClick={handleGenerate}
         disabled={loading}
       >
-        {loading ? 'Generating…' : 'Generate'}
+        {loading ? "Generating…" : "Generate"}
       </button>
 
-      {error && <div style={{ color: 'crimson', marginTop: 8 }}>{error}</div>}
+      {error && <div className={styles.error}>{error}</div>}
 
       {result && (
-        <div className={`${styles.resultCard} hide-when-study`}>
-          <h2 className="font-bold mb-2">Result</h2>
-          <pre>{result}</pre>
+        <div className={styles.resultCard}>
+          <h2 className={styles.resultTitle}>Result</h2>
+          <pre className={styles.resultContent}>{result}</pre>
         </div>
       )}
     </div>
