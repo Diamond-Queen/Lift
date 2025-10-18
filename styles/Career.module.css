@@ -54,7 +54,7 @@
   outline: none;
 }
 
-select {
+.select {
   width: 100%;
   border: 1px solid #d1d5db;
   border-radius: 8px;
@@ -67,7 +67,7 @@ select {
   transition: border 0.2s, box-shadow 0.2s;
 }
 
-select:focus {
+.select:focus {
   border-color: #6a5af9;
   box-shadow: 0 0 0 2px rgba(106, 90, 249, 0.2);
   outline: none;
@@ -199,8 +199,14 @@ select:focus {
 
 /* =================== Print Media =================== */
 @media print {
-  body * { visibility: hidden; }
-  .printableResume, .printableCover, .printableResume *, .printableCover * { visibility: visible; }
-  .printableResume, .printableCover { position: absolute; top: 0; left: 0; width: 100%; }
+    .container * { visibility: hidden; }
+  .printableResume * { visibility: visible; }
+  .printableCover * {visibility: visible; }
+  .printableResume * { visibility: visible; }
+  .printableCover * { visibility: visible; }
+  .printableResume * { visibility: visible; }
+  .printableCover * { visibility: visible; }
+  .printableResume { position: absolute; top: 0; left: 0; width: 100%; }
+  .printableCover { position: absolute; top: 0; left: 0; width: 100%; }
   .printBtn { display: none; }
 }
