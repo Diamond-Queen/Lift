@@ -171,41 +171,80 @@
 }
 
 /* =================== Cover Letter =================== */
+/* =================== Canva-Style Cover Letter =================== */
 .printableCover {
-  padding: 2.5rem 3rem;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
   max-width: 700px;
-  margin: 0 auto;
+  margin: 2rem auto;
   font-family: 'Inter', sans-serif;
   color: #222;
+}
+
+/* Letterhead Section */
+.letterhead {
+  background: linear-gradient(90deg, #6a5af9, #b8871f);
+  color: #fff;
+  text-align: center;
+  padding: 1.5rem 2rem;
+}
+
+.letterName {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.letterhead p {
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* Letter Body */
+.letterBody {
+  padding: 2.5rem 3rem;
+  background: #fff;
+  border-radius: 0 0 16px 16px;
   line-height: 1.75;
+  font-size: 1rem;
 }
 
 .date {
   text-align: right;
-  color: #555;
+  color: #666;
   font-size: 0.95rem;
   margin-bottom: 1.5rem;
 }
 
 .recipient {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   font-weight: 500;
   color: #333;
 }
 
-.printableCover p {
+.letterBody p {
   margin-bottom: 1.2rem;
-  font-size: 1rem;
 }
 
-.printableCover strong {
+.letterBody strong {
   font-weight: 700;
   color: #111;
 }
 
+/* Print Styling */
+@media print {
+  .printableCover {
+    box-shadow: none;
+    border-radius: 0;
+    margin: 0;
+  }
+  .printBtn { display: none; }
+}
+    
 /* =================== Print Media =================== */
 @media print {
     .container * { visibility: hidden; }

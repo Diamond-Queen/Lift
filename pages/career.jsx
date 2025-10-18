@@ -187,20 +187,29 @@ export default function Career() {
 
           {type === "cover" && result && (
             <div className={styles.printableCover}>
-            <p className={styles.date}>{new Date().toLocaleDateString()}</p>
+              <div className={styles.letterhead}>
+                <h1 className={styles.letterName}>{result.name}</h1>
+                {result.email && <p>{result.email}</p>}
+                {result.phone && <p>{result.phone}</p>}
+                {result.address && <p>{result.address}</p>}
+              </div>
 
-            {result.recipient && <p className={styles.recipient}>{result.recipient}</p>}
+              <div className={styles.letterBody}>
+                <p className={styles.date}>{new Date().toLocaleDateString()}</p>
 
-            <p>Dear {result.recipient || "Hiring Manager"},</p>
+                {result.recipient && <p className={styles.recipient}>{result.recipient}</p>}
 
-            {result.paragraphs && result.paragraphs.map((para, i) => (
-              <p key={i}>{para}</p>
-            ))}
+                <p>Dear {result.recipient || "Hiring Manager"},</p>
 
-            <p>Sincerely,</p>
-            <p><strong>{result.name}</strong></p>
-          </div>
-        )}
+                {result.paragraphs && result.paragraphs.map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))}
+
+                <p>Sincerely,</p>
+                <p><strong>{result.name}</strong></p>
+              </div>
+            </div>
+          )}
 
 
           <button className={styles.printBtn} onClick={() => window.print()}>
