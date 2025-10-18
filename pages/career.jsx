@@ -185,16 +185,23 @@ export default function Career() {
             </div>
           )}
 
-          {type === "cover" && result.name && (
+          {type === "cover" && result && (
             <div className={styles.printableCover}>
-              <p>{new Date().toLocaleDateString()}</p>
-              <p>{recipient || result.recipient}</p>
-              <p>Dear {recipient || result.recipient},</p>
-              <p>{paragraphs || result.paragraphs}</p>
-              <p>Sincerely,</p>
-              <p>{name || result.name}</p>
-            </div>
-          )}
+            <p className={styles.date}>{new Date().toLocaleDateString()}</p>
+
+            {result.recipient && <p className={styles.recipient}>{result.recipient}</p>}
+
+            <p>Dear {result.recipient || "Hiring Manager"},</p>
+
+            {result.paragraphs && result.paragraphs.map((para, i) => (
+              <p key={i}>{para}</p>
+            ))}
+
+            <p>Sincerely,</p>
+            <p><strong>{result.name}</strong></p>
+          </div>
+        )}
+
 
           <button className={styles.printBtn} onClick={() => window.print()}>
             Print {type === "resume" ? "Resume" : "Cover Letter"}
