@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import styles from "../styles/Notes.module.css";
 
 export default function Notes() {
   const [input, setInput] = useState("");
@@ -16,25 +17,27 @@ export default function Notes() {
     setQuiz(data.quiz);
   };
 
+  const handleInputChange = useCallback((e) => setInput(e.target.value), []);
+
   return (
-    <div className="container">
-      <h1 className="page-title">Lift Notes</h1>
+    <div className={styles.container}>
+      <h1 className={styles.pageTitle}>Lift Notes</h1>
       <textarea
-        className="textarea"
+        className={styles.textarea}
         rows={8}
         placeholder="Paste your notes here..."
         value={input}
-        onChange={(e) => setInput(e.target.value)}
+        onChange={handleInputChange}
       />
       <button
-        className="btn-action btn-blue"
+        className={`${styles.btnAction} ${styles.btnBlue} hide-when-study`}
         onClick={handleGenerate}
       >
         Generate
       </button>
 
       {summary && (
-        <div className="result-card">
+        <div className={`${styles.resultCard} hide-when-study`}>
           <h2 className="font-bold mb-2">Summary</h2>
           <p>{summary}</p>
           <h2 className="font-bold mt-4 mb-2">Quiz Questions</h2>

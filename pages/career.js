@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import styles from "../styles/Career.module.css";
 
 export default function Career() {
@@ -32,6 +32,11 @@ export default function Career() {
     }
   };
 
+  const handleNameChange = useCallback((e) => setName(e.target.value), []);
+  const handleExperienceChange = useCallback((e) => setExperience(e.target.value), []);
+  const handleSkillsChange = useCallback((e) => setSkills(e.target.value), []);
+  const handleTypeChange = useCallback((e) => setType(e.target.value), []);
+
   return (
     <div className={styles.container}>
       <h1 className={styles.pageTitle}>Lift Career</h1>
@@ -40,7 +45,7 @@ export default function Career() {
         placeholder="Name"
         className={styles.input}
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={handleNameChange}
         disabled={loading}
       />
       <textarea
@@ -48,7 +53,7 @@ export default function Career() {
         className={styles.textarea}
         rows={3}
         value={experience}
-        onChange={(e) => setExperience(e.target.value)}
+        onChange={handleExperienceChange}
         disabled={loading}
       />
       <textarea
@@ -56,13 +61,13 @@ export default function Career() {
         className={styles.textarea}
         rows={3}
         value={skills}
-        onChange={(e) => setSkills(e.target.value)}
+        onChange={handleSkillsChange}
         disabled={loading}
       />
       <select
         className={styles.input}
         value={type}
-        onChange={(e) => setType(e.target.value)}
+        onChange={handleTypeChange}
         disabled={loading}
       >
         <option value="resume">Resume</option>
@@ -79,7 +84,7 @@ export default function Career() {
       {error && <div style={{ color: 'crimson', marginTop: 8 }}>{error}</div>}
 
       {result && (
-        <div className={styles.resultCard}>
+        <div className={`${styles.resultCard} hide-when-study`}>
           <h2 className="font-bold mb-2">Result</h2>
           <pre>{result}</pre>
         </div>

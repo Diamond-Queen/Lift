@@ -1,13 +1,40 @@
 /* Global styles for Lift app - centralized stylesheet used across pages */
 
-/* Import Inter from Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+/* Import Inter and two display/script fonts for a chic look */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Poppins:ital,wght@0,400;0,600;0,700;1,400&family=Great+Vibes&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-	--bg-top: #60a5fa; /* sky-400 */
-	--bg-bottom: #7c3aed; /* purple-600 */
-	--glass-shadow: 0 10px 30px rgba(2,6,23,0.35);
+	--bg-top: #0b0b0b; /* near-black */
+	--bg-bottom: #0f0f10; /* slightly lighter */
+	--accent: #D4AF37; /* gold-ish */
+	--accent-contrast: #0b0b0b;
+	--muted: rgba(255,255,255,0.95);
+	--glass-shadow: 0 10px 40px rgba(2,6,23,0.6);
 	--inter: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+	/* alpha-ready accent fallbacks for better cross-browser compatibility */
+	--accent-rgb: 212,175,55;
+	--accent-weak: rgba(212,175,55,0.12);
+	--accent-weak-2: rgba(212,175,55,0.08);
+	--accent-border: rgba(212,175,55,0.15);
+	--font-display: 'Great Vibes', cursive; /* script/cursive */
+	--font-heading: 'Playfair Display', serif; /* elegant serif for headings */
+	--btn-padding-vert: 0.65rem;
+	--btn-padding-horiz: 1.1rem;
+	--btn-radius: 10px;
+	--accent-border: rgba(212,175,55,0.15);
+	/* design tokens */
+	--space-xxs: 4px;
+	--space-xs: 8px;
+	--space-sm: 12px;
+	--space-md: 20px;
+	--space-lg: 28px;
+	--radius-sm: 8px;
+	--radius-md: 12px;
+	--easing: cubic-bezier(.2,.9,.3,1);
 }
 
 html, body, #__next {
@@ -20,6 +47,69 @@ body {
 	-webkit-font-smoothing:antialiased;
 	-moz-osx-font-smoothing:grayscale;
 }
+
+/* Apply app background using theme variables so Firefox respects it */
+body {
+	background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+	color: var(--muted);
+	min-height: 100vh;
+}
+
+/* Theme overrides */
+[data-theme="dark"] {
+	--bg-top: #0b0b0b;
+	--bg-bottom: #0f0f10;
+	--accent: #D4AF37;
+	--muted: rgba(255,255,255,0.95);
+}
+
+/* Helpful RGB var for subtle borders (kept for backward compatibility) */
+:root { --accent-rgb: 212,175,55; }
+
+/* Study mode: hide distractions and increase focus */
+[data-studymode="true"] {
+	--muted: rgba(255,255,255,0.98);
+}
+
+[data-studymode="true"] .hide-when-study {
+	display: none !important;
+}
+
+/* Slightly larger textareas and centered content in study mode */
+[data-studymode="true"] textarea {
+	min-height: 10rem;
+}
+
+/* Make result cards pop in study mode */
+[data-studymode="true"] .result-card {
+	transform: translateY(-2px);
+	box-shadow: 0 14px 40px rgba(0,0,0,0.45);
+}
+
+/* Bootstrap switch overrides to match the gold accent */
+.form-check-input:checked {
+	background-color: var(--accent) !important;
+	border-color: var(--accent) !important;
+}
+.form-check-input:checked:focus {
+	box-shadow: 0 0 0 4px rgba(212,175,55,0.12) !important;
+}
+.form-check-input {
+	transition: background-color 160ms var(--easing), border-color 160ms var(--easing), box-shadow 180ms;
+}
+
+/* Button tokens */
+.btn-primary {
+	background: linear-gradient(90deg, var(--accent) 0%, #b98f2f 100%);
+	border: none;
+	color: var(--accent-contrast);
+	box-shadow: 0 10px 30px rgba(184,143,47,0.08);
+}
+.btn-primary:hover, .btn-primary:focus {
+	transform: translateY(-3px);
+	box-shadow: 0 20px 48px rgba(184,143,47,0.12);
+}
+
 
 .page-root {
 	min-height: 100vh;
