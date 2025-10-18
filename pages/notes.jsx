@@ -3,52 +3,46 @@ import styles from "../styles/Notes.module.css";
 
 export default function Notes() {
   const [input, setInput] = useState("");
-  const [summary, setSummary] = useState("");
-  const [quiz, setQuiz] = useState([]);
+  const [file, setFile] = useState(null);
+  const [summaries, setSummaries] = useState([]);
+  const [flashcards, setFlashcards] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleGenerate = async () => {
-    if (!input.trim()) {
-      setError("Please add some notes first.");
+    if (!input.trim() && !file) {
+      setError("Please add notes or upload a file.");
       return;
     }
 
     setLoading(true);
     setError("");
-    setSummary("");
-    setQuiz([]);
+    setSummaries([]);
+    setFlashcards([]);
 
     try {
-      const res = await fetch("/api/notes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: input }),
-      });
+      const formData = new FormData();
+      formData.append("notes", input);
+      if (file) formData.append("file", file);
 
+      const res = await fetch("/api/notes", { method: "POST", body: formData });
       const data = await res.json();
-      if (data.error) {
-        setError(data.error);
-      } else {
-        setSummary(data.summary);
-        setQuiz(
-          data.quiz.map((q) => ({ ...q, flipped: false })) // add flip state
-        );
+
+      if (data.error) setError(data.error);
+      else {
+        setSummaries(data.summaries);
+        setFlashcards(data.flashcards);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to generate. Try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = useCallback((e) => setInput(e.target.value), []);
-
   const toggleFlashcard = (index) => {
-    setQuiz((prev) =>
-      prev.map((card, i) =>
-        i === index ? { ...card, flipped: !card.flipped } : card
-      )
+    setFlashcards((prev) =>
+      prev.map((card, i) => (i === index ? { ...card, flipped: !card.flipped } : card))
     );
   };
 
@@ -58,10 +52,17 @@ export default function Notes() {
 
       <textarea
         className={styles.textarea}
-        rows={8}
+        rows={6}
         placeholder="Paste your notes here..."
         value={input}
-        onChange={handleInputChange}
+        onChange={(e) => setInput(e.target.value)}
+      />
+
+      <input
+        type="file"
+        accept=".pdf,.pptx"
+        onChange={(e) => setFile(e.target.files[0])}
+        className={styles.fileInput}
       />
 
       <button
@@ -74,18 +75,20 @@ export default function Notes() {
 
       {error && <div className={styles.error}>{error}</div>}
 
-      {summary && (
+      {summaries.length > 0 && (
         <div className={styles.resultCard}>
-          <h2 className={styles.resultTitle}>Summary</h2>
-          <p>{summary}</p>
+          <h2 className={styles.resultTitle}>Summaries</h2>
+          {summaries.map((sum, i) => (
+            <p key={i} className={styles.summaryBlock}>{sum}</p>
+          ))}
         </div>
       )}
 
-      {quiz.length > 0 && (
+      {flashcards.length > 0 && (
         <div className={styles.flashcardsContainer}>
           <h2 className={styles.resultTitle}>Flashcards</h2>
           <div className={styles.flashcardsGrid}>
-            {quiz.map((card, i) => (
+            {flashcards.map((card, i) => (
               <div
                 key={i}
                 className={`${styles.flashcard} ${card.flipped ? styles.flipped : ""}`}
@@ -105,3 +108,4 @@ export default function Notes() {
     </div>
   );
 }
+// Note: The corresponding API route handling the POST request is in pages/api/notes.js
