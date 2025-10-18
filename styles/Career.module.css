@@ -1,20 +1,22 @@
+/* Container for the entire page */
 .container {
   padding: 1.5rem;
   max-width: 42rem;
-  margin: 0 auto;
-  font-family: var(--font-sans, Arial, sans-serif);
+  margin-left: auto;
+  margin-right: auto;
 }
 
+/* Page title */
 .pageTitle {
   font-size: 1.75rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  color: var(--muted, #ccc);
+  color: var(--muted);
+  font-family: var(--font-heading);
 }
 
-.input,
-.textarea,
-select {
+/* Inputs and selects */
+.input {
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 10px;
@@ -23,13 +25,28 @@ select {
   font-size: 1rem;
   box-sizing: border-box;
   background: rgba(255, 255, 255, 0.02);
-  color: var(--muted, #ccc);
+  color: var(--muted);
 }
 
+/* Textareas */
+.textarea {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 0.9rem;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--muted);
+  resize: vertical;
+}
+
+/* Buttons */
 .btnAction {
   display: inline-block;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  padding: var(--btn-padding-vert, 0.75rem) var(--btn-padding-horiz, 1.5rem);
+  border-radius: var(--btn-radius, 10px);
   font-weight: 700;
   color: var(--accent-contrast, #fff);
   text-decoration: none;
@@ -42,84 +59,92 @@ select {
 
 .btnPurple {
   background: linear-gradient(90deg, var(--accent, #6c63ff) 0%, #b8871f 100%);
+  color: var(--accent-contrast, #fff);
 }
 
 .btnAction:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.28);
 }
 
+/* Error messages */
+.error {
+  color: crimson;
+  margin-top: 8px;
+}
+
+/* Result card */
 .resultCard {
-  margin-top: 1.5rem;
-  padding: 1.5rem;
+  margin-top: 1.25rem;
+  padding: 1.25rem;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.03);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-  color: var(--muted, #ccc);
+  color: var(--muted);
   box-shadow: 0 10px 30px rgba(2, 6, 23, 0.2);
 }
 
-/* PRINTABLE RESUME & COVER LETTER */
+/* Loading state */
+.loading {
+  opacity: 0.85;
+  cursor: progress;
+}
+
+/* Printable resume / cover letter */
 .printableResume,
 .printableCover {
-  background: #fff;
-  color: #000;
-  padding: 2rem;
-  font-family: "Times New Roman", serif;
-  font-size: 12pt;
-  line-height: 1.4;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .printableResume h1 {
-  font-size: 24pt;
-  margin-bottom: 0.2rem;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .printableResume p,
 .printableCover p {
-  margin: 0.2rem 0;
-}
-
-.printableResume h2 {
-  font-size: 14pt;
-  margin-top: 1rem;
-  border-bottom: 1px solid #333;
-  padding-bottom: 2px;
-}
-
-.printableResume ul {
-  list-style: disc;
-  margin-left: 1.5rem;
-}
-
-.job,
-.education {
   margin-bottom: 0.5rem;
 }
 
+.printableResume h2 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+}
+
+/* Section titles */
+.sectionTitle {
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Print button */
 .printBtn {
   margin-top: 1rem;
   padding: 0.5rem 1rem;
+  border-radius: 8px;
   background: var(--accent, #6c63ff);
   color: #fff;
-  border: none;
-  border-radius: 6px;
+  font-weight: 600;
   cursor: pointer;
+  border: none;
 }
 
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  .printableResume,
-  .printableCover {
-    visibility: visible;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
-  .printBtn {
-    display: none;
-  }
+.printBtn:hover {
+  opacity: 0.9;
+}
+
+/* Job/education entries */
+.job {
+  margin-bottom: 0.5rem;
+}
+
+/* Muted text helper */
+.muted {
+  opacity: 0.95;
 }

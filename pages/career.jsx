@@ -27,48 +27,66 @@ export default function Career() {
 
   const [result, setResult] = useState(null);
 
-  const handleGenerate = async () => {
-    setError("");
-    setResult(null);
+const handleGenerate = async () => {
+  setError("");
+  setResult(null);
 
-    if (!name.trim() || !email.trim() || !phone.trim()) {
-      setError("Name, email, and phone are required.");
-      return;
-    }
+  if (!name.trim() || !email.trim() || !phone.trim()) {
+    setError("Name, email, and phone are required.");
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      const bodyData = {
-        type,
-        name,
-        email,
-        phone,
-        ...(type === "resume" && {
-          address, linkedin, objective, experience, education, skills, certifications
-        }),
-        ...(type === "cover" && {
-          recipient, position, paragraphs
-        }),
-      };
+  try {
+    // parse textarea inputs into arrays for structured display
+    const parsedExperience = experience.split("\n").map(line => {
+      const [title, company, dates, details] = line.split("|").map(s => s?.trim() || "");
+      return { title, company, dates, details };
+    }).filter(e => e.title);
 
-      const res = await fetch("/api/career", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyData),
-      });
+    const parsedEducation = education.split("\n").map(line => {
+      const [degree, school, dates] = line.split("|").map(s => s?.trim() || "");
+      return { degree, school, dates };
+    }).filter(e => e.degree);
 
-      if (!res.ok) throw new Error("Network response not ok");
+    const parsedSkills = skills.split(",").map(s => s.trim()).filter(Boolean);
+    const parsedCerts = certifications.split(",").map(s => s.trim()).filter(Boolean);
 
-      const data = await res.json();
-      setResult(data.result || {});
-    } catch (err) {
-      console.error(err);
-      setError("Failed to generate. Try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const bodyData = {
+      type,
+      name,
+      email,
+      phone,
+      ...(type === "resume" && {
+        address,
+        linkedin,
+        objective,
+        experience: parsedExperience,
+        education: parsedEducation,
+        skills: parsedSkills,
+        certifications: parsedCerts,
+      }),
+      ...(type === "cover" && { recipient, position, paragraphs }),
+    };
+
+    const res = await fetch("/api/career", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bodyData),
+    });
+
+    if (!res.ok) throw new Error("Network response not ok");
+    const data = await res.json();
+    setResult(data.result || {});
+  } catch (err) {
+    console.error(err);
+    setError("Failed to generate. Try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className={styles.container}>
