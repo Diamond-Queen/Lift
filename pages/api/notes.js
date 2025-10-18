@@ -5,24 +5,20 @@ import formidable from "formidable";
 import { extractPptx } from "pptx-content-extractor";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// Allow file uploads
 export const config = { api: { bodyParser: false } };
 
-// Extract text from PDF or PPTX
 async function extractTextPerBlock(file) {
   const mime = file.mimetype;
+  const buffer = await fs.readFile(file.filepath);
 
   if (mime === "application/pdf") {
-    const buffer = await fs.readFile(file.filepath);
     const data = await pdfParse(buffer);
     return data.text.split("\f").map(p => p.trim()).filter(Boolean);
   } else if (
     mime ===
     "application/vnd.openxmlformats-officedocument.presentationml.presentation"
   ) {
-    const buffer = await fs.readFile(file.filepath);
-    const pptxData = await extractPptx(buffer); // slides + notes
+    const pptxData = await extractPptx(buffer);
     return pptxData.slides
       .map((slide, i) => {
         const note = pptxData.notes[i] || "";
@@ -34,108 +30,95 @@ async function extractTextPerBlock(file) {
   }
 }
 
-export default async function handler(req, res) {
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "Method not allowed" });
+async function generateSummariesAndFlashcards(notesBlocks) {
+  const summaries = [];
+  const flashcards = [];
 
-  const isMultipart = req.headers["content-type"]?.includes("multipart/form-data");
+  for (const block of notesBlocks) {
+    const truncated = block.slice(0, 2000);
 
-  let notesBlocks = [];
-
-  if (isMultipart) {
-    // Handle file uploads
-    const form = new formidable.IncomingForm({ multiples: false });
-
-    form.parse(req, async (err, fields, files) => {
-      if (err) return res.status(500).json({ error: err.message });
-
-      if (fields.notes) notesBlocks.push(fields.notes);
-
-      if (files.file) {
-        try {
-          const extracted = await extractTextPerBlock(files.file);
-          notesBlocks.push(...extracted);
-        } catch (e) {
-          return res.status(400).json({ error: "Failed to extract file: " + e.message });
-        }
-      }
-
-      if (!notesBlocks.length) return res.status(400).json({ error: "No notes provided" });
-
-      await generateSummariesAndFlashcards(notesBlocks, res);
+    // Summary
+    const summaryResp = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: `Summarize clearly:\n\n${truncated}` }],
     });
-  } else {
-    // Plain JSON POST (typed notes)
+    summaries.push(summaryResp.choices[0].message.content);
+
+    // Flashcards
+    const quizResp = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: `Create 3-5 flashcards in JSON format [{"question":"...","answer":"..."}] only:\n\n${truncated}`,
+        },
+      ],
+    });
+
+    let quiz = [];
     try {
-      const body = await new Promise((resolve, reject) => {
-        let data = "";
-        req.on("data", chunk => data += chunk);
-        req.on("end", () => resolve(JSON.parse(data)));
-        req.on("error", reject);
-      });
-
-      if (!body.notes || !body.notes.trim())
-        return res.status(400).json({ error: "No notes provided" });
-
-      notesBlocks.push(body.notes);
-
-      await generateSummariesAndFlashcards(notesBlocks, res);
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json({ error: "Invalid JSON" });
+      quiz = JSON.parse(quizResp.choices[0].message.content);
+      if (!Array.isArray(quiz)) quiz = [];
+    } catch {
+      // fallback parser for Q/A
+      const lines = quizResp.choices[0].message.content.split("\n");
+      quiz = lines
+        .filter(l => l.startsWith("Q:") || l.startsWith("A:"))
+        .reduce((acc, line) => {
+          if (line.startsWith("Q:")) acc.push({ question: line.slice(2).trim(), answer: "" });
+          else if (line.startsWith("A:") && acc.length)
+            acc[acc.length - 1].answer = line.slice(2).trim();
+          return acc;
+        }, []);
     }
+
+    flashcards.push(...quiz.map(q => ({ ...q, flipped: false })));
   }
+
+  return { summaries, flashcards };
 }
 
-// Generate summaries + flashcards
-async function generateSummariesAndFlashcards(blocks, res) {
+export default async function handler(req, res) {
   try {
-    const summaries = [];
-    const flashcards = [];
+    const contentType = req.headers["content-type"] || "";
 
-    for (const block of blocks) {
-      const truncated = block.slice(0, 2000); // prevent token overflow
+    if (contentType.includes("multipart/form-data")) {
+      // Handle file uploads
+      const form = new formidable.IncomingForm({ multiples: false });
+      form.parse(req, async (err, fields, files) => {
+        if (err) return res.status(500).json({ error: err.message });
 
-      // Summary
-      const summaryResp = await client.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: `Summarize clearly:\n\n${truncated}` }],
+        let notesBlocks = [];
+        if (fields.notes) notesBlocks.push(fields.notes);
+
+        if (files.file) {
+          try {
+            const extracted = await extractTextPerBlock(files.file);
+            notesBlocks.push(...extracted);
+          } catch (e) {
+            return res.status(400).json({ error: "File extraction failed: " + e.message });
+          }
+        }
+
+        if (!notesBlocks.length) return res.status(400).json({ error: "No notes provided" });
+
+        const result = await generateSummariesAndFlashcards(notesBlocks);
+        res.status(200).json(result);
       });
-      const summary = summaryResp.choices[0].message.content;
-      summaries.push(summary);
+    } else if (contentType.includes("application/json")) {
+      // Handle JSON body (typed notes)
+      let body = "";
+      for await (const chunk of req) body += chunk;
+      const data = JSON.parse(body);
 
-      // Flashcards
-      const quizResp = await client.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "user",
-            content: `Create 3-5 flashcards in JSON format only, [{"question":"...","answer":"..."}]:\n\n${truncated}`,
-          },
-        ],
-      });
+      if (!data.notes || !data.notes.trim())
+        return res.status(400).json({ error: "No notes provided" });
 
-      let quiz = [];
-      try {
-        quiz = JSON.parse(quizResp.choices[0].message.content);
-        if (!Array.isArray(quiz)) quiz = [];
-      } catch {
-        // fallback parsing: simple Q/A lines
-        const lines = quizResp.choices[0].message.content.split("\n");
-        quiz = lines
-          .filter(l => l.startsWith("Q:") || l.startsWith("A:"))
-          .reduce((acc, line) => {
-            if (line.startsWith("Q:")) acc.push({ question: line.slice(2).trim(), answer: "" });
-            else if (line.startsWith("A:") && acc.length)
-              acc[acc.length - 1].answer = line.slice(2).trim();
-            return acc;
-          }, []);
-      }
-
-      flashcards.push(...quiz.map(q => ({ ...q, flipped: false })));
+      const result = await generateSummariesAndFlashcards([data.notes]);
+      res.status(200).json(result);
+    } else {
+      return res.status(400).json({ error: "Unsupported content type" });
     }
-
-    res.status(200).json({ summaries, flashcards });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
