@@ -172,29 +172,38 @@
 
 /* =================== Cover Letter =================== */
 .printableCover {
-  padding: 2rem;
-  font-size: 12pt;
-  line-height: 1.6;
-  color: #111;
+  padding: 2.5rem 3rem;
   background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  max-width: 700px;
+  margin: 0 auto;
+  font-family: 'Inter', sans-serif;
+  color: #222;
+  line-height: 1.75;
+}
+
+.date {
+  text-align: right;
+  color: #555;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.recipient {
+  margin-bottom: 1rem;
+  font-weight: 500;
+  color: #333;
 }
 
 .printableCover p {
-  margin-bottom: 0.8rem;
+  margin-bottom: 1.2rem;
+  font-size: 1rem;
 }
 
-/* Print Button */
-.printBtn {
-  margin-top: 1.5rem;
-  padding: 0.6rem 1.2rem;
-  background: #6a5af9;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+.printableCover strong {
   font-weight: 700;
+  color: #111;
 }
 
 /* =================== Print Media =================== */
