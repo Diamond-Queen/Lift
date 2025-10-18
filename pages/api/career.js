@@ -85,20 +85,6 @@ Respond ONLY with valid JSON:
 
     let result = completion.choices[0].message.content;
 
-    // Ensure valid JSON
-    try {
-      result = JSON.parse(result);
-    } catch (err) {
-      console.error("Failed to parse AI response as JSON:", err);
-      return res.status(500).json({ error: "Failed to parse AI response" });
-    }
-
-    res.status(200).json({ result });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-}
 
   if (!name || !email || !phone) {
     return res.status(400).json({ error: "Name, email, and phone are required" });
@@ -175,4 +161,8 @@ Respond ONLY with valid JSON:
     console.error(err);
     res.status(500).json({ error: err.message });
   }
-
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}
