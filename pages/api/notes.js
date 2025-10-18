@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import pdfParse from "pdf-parse";
 import fs from "fs/promises";
 import formidable from "formidable";
-import pptxParser from "pptx-parser";
+import { extractPptxText } from "pptx-extract"; // more reliable PPTX parser
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export const config = { api: { bodyParser: false } };
@@ -13,17 +13,16 @@ async function extractTextPerBlock(file) {
 
   if (mime === "application/pdf") {
     const data = await pdfParse(buffer);
-    return data.text.split("\f").map((page) => page.trim()).filter(Boolean);
+    return data.text.split("\f").map((p) => p.trim()).filter(Boolean);
   } else if (mime === "application/vnd.openxmlformats-officedocument.presentationml.presentation") {
-    const slides = await pptxParser(buffer);
+    const slides = await extractPptxText(buffer);
     return slides.map((s) => s.text).filter(Boolean);
   } else {
     throw new Error("Unsupported file type");
   }
 }
 
-// Split large text into ~2000-char chunks
-function chunkText(text, chunkSize = 2000) {
+function chunkText(text, chunkSize = 1500) {
   const chunks = [];
   let start = 0;
   while (start < text.length) {
@@ -31,6 +30,25 @@ function chunkText(text, chunkSize = 2000) {
     start += chunkSize;
   }
   return chunks;
+}
+
+function parseFlashcards(raw) {
+  try {
+    // strip ```json ... ``` code block if exists
+    const cleaned = raw.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    // fallback to Q/A lines
+    const lines = raw.split("\n");
+    return lines
+      .filter((l) => l.startsWith("Q:") || l.startsWith("A:"))
+      .reduce((acc, line) => {
+        if (line.startsWith("Q:")) acc.push({ question: line.slice(2).trim(), answer: "" });
+        else if (line.startsWith("A:") && acc.length) acc[acc.length - 1].answer = line.slice(2).trim();
+        return acc;
+      }, []);
+  }
 }
 
 export default async function handler(req, res) {
@@ -48,7 +66,7 @@ export default async function handler(req, res) {
         const extractedBlocks = await extractTextPerBlock(files.file);
         notesBlocks = notesBlocks.concat(extractedBlocks);
       } catch (e) {
-        return res.status(400).json({ error: "Failed to extract text from file: " + e.message });
+        return res.status(400).json({ error: "Failed to extract text: " + e.message });
       }
     }
 
@@ -67,44 +85,28 @@ export default async function handler(req, res) {
             model: "gpt-4o-mini",
             messages: [{ role: "user", content: `Summarize clearly:\n\n${chunk}` }],
           });
-          const summary = summaryResp.choices[0].message.content.trim();
-          summaries.push(summary);
+          summaries.push(summaryResp.choices[0].message.content.trim());
 
-          // Generate flashcards
-          const quizResp = await client.chat.completions.create({
+          // Generate flashcards in strict JSON format
+          const flashResp = await client.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
               {
                 role: "user",
-                content: `Create 3-5 flashcards in JSON format from this text. Use [{"question": "...", "answer": "..."}] only:\n\n${chunk}`,
+                content: `Create 3-5 flashcards in JSON only from this text. Respond in code block like: \`\`\`json [{"question":"...","answer":"..."}]\`\`\`\n\n${chunk}`,
               },
             ],
           });
 
-          let quiz = [];
-          try {
-            quiz = JSON.parse(quizResp.choices[0].message.content);
-            if (!Array.isArray(quiz)) quiz = [];
-          } catch {
-            // Fallback parser for malformed JSON
-            const lines = quizResp.choices[0].message.content.split("\n");
-            quiz = lines
-              .filter((l) => l.startsWith("Q:") || l.startsWith("A:"))
-              .reduce((acc, line) => {
-                if (line.startsWith("Q:")) acc.push({ question: line.slice(2).trim(), answer: "" });
-                else if (line.startsWith("A:") && acc.length) acc[acc.length - 1].answer = line.slice(2).trim();
-                return acc;
-              }, []);
-          }
-
-          flashcards.push(...quiz.map((q) => ({ ...q, flipped: false })));
+          const parsed = parseFlashcards(flashResp.choices[0].message.content);
+          flashcards.push(...parsed.map((q) => ({ ...q, flipped: false })));
         }
       }
 
       res.status(200).json({ summaries, flashcards });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: err.message });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: e.message });
     }
   });
 }
