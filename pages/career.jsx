@@ -187,34 +187,44 @@ export default function Career() {
 
       {type === "cover" && result && (
         <div className={styles.printableCover}>
+          {/* === Letterhead === */}
           <div className={styles.letterhead}>
-            <h1 className={styles.letterName}>{result.name}</h1>
+            <h1 className={styles.letterName}>{result.name || name}</h1>
             <div className={styles.contactRow}>
-              {result.email && <span>{result.email}</span>}
-              {result.phone && <span>• {result.phone}</span>}
-              {result.address && <span>• {result.address}</span>}
+              {(result.email || email) && <span>{result.email || email}</span>}
+              {(result.phone || phone) && <span>• {result.phone || phone}</span>}
+              {(result.address || address) && <span>• {result.address || address}</span>}
             </div>
           </div>
 
+          {/* === Body === */}
           <div className={styles.letterBody}>
             <p className={styles.date}>{new Date().toLocaleDateString()}</p>
 
-            {result.recipient && <p className={styles.recipient}>{result.recipient}</p>}
+            {(result.recipient || recipient) && (
+              <p className={styles.recipient}>{result.recipient || recipient}</p>
+            )}
 
-            <p>Dear {result.recipient || "Hiring Manager"},</p>
+            <p>Dear {(result.recipient || recipient) || "Hiring Manager"},</p>
 
-            {result.paragraphs && result.paragraphs.map((para, i) => (
-              <p key={i}>{para}</p>
-            ))}
+            {/* Handle both string or array paragraphs */}
+            {Array.isArray(result.paragraphs)
+              ? result.paragraphs.map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))
+              : result.paragraphs && <p>{result.paragraphs}</p>}
 
             <p>Sincerely,</p>
-            <p><strong>{result.name}</strong></p>
-            <p className={styles.footerContact}>
-              {result.email && <span>{result.email}</span>} {result.phone && <span>• {result.phone}</span>}
-            </p>
+            <p><strong>{result.name || name}</strong></p>
+
+            <div className={styles.footerContact}>
+              {(result.email || email) && <span>{result.email || email}</span>}
+              {(result.phone || phone) && <span>• {result.phone || phone}</span>}
+            </div>
           </div>
         </div>
       )}
+
 
 
 
