@@ -6,13 +6,13 @@ export default function Career() {
   const [experience, setExperience] = useState("");
   const [skills, setSkills] = useState("");
   const [type, setType] = useState("resume");
-  const [result, setResult] = useState("");
+  const [result, setResult] = useState(null); // now an object
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleGenerate = async () => {
     setError("");
-    setResult("");
+    setResult(null);
     if (!name.trim()) {
       setError("Please enter your name.");
       return;
@@ -29,7 +29,14 @@ export default function Career() {
       if (!res.ok) throw new Error("Network response was not ok");
 
       const data = await res.json();
-      setResult(data.result || data.output || "No output returned.");
+
+      // Expecting structured JSON: { name, contact, experience: [], skills: [] }
+      setResult(data.result || data.output || {
+        name,
+        contact: "N/A",
+        experience: [{ title: "N/A", company: "", dates: "", details: experience }],
+        skills: skills.split(",").map(s => s.trim())
+      });
     } catch (err) {
       console.error(err);
       setError("Failed to generate. Please try again.");
@@ -52,7 +59,7 @@ export default function Career() {
       />
 
       <textarea
-        placeholder="Experience"
+        placeholder="Experience (use commas for multiple jobs)"
         className={styles.textarea}
         rows={3}
         value={experience}
@@ -61,9 +68,9 @@ export default function Career() {
       />
 
       <textarea
-        placeholder="Skills"
+        placeholder="Skills (comma separated)"
         className={styles.textarea}
-        rows={3}
+        rows={2}
         value={skills}
         onChange={useCallback((e) => setSkills(e.target.value), [])}
         disabled={loading}
@@ -93,8 +100,31 @@ export default function Career() {
 
       {result && (
         <div className={styles.resultCard}>
-          <h2 className={styles.resultTitle}>Result</h2>
-          <pre className={styles.resultContent}>{result}</pre>
+          <h1 className={styles.name}>{result.name}</h1>
+          <p className={styles.contact}>{result.contact}</p>
+
+          <section>
+            <h2 className={styles.sectionTitle}>Experience</h2>
+            {result.experience.map((job, idx) => (
+              <div key={idx} className={styles.job}>
+                <strong>{job.title}</strong> — {job.company} ({job.dates})
+                <p>{job.details}</p>
+              </div>
+            ))}
+          </section>
+
+          <section>
+            <h2 className={styles.sectionTitle}>Skills</h2>
+            <ul>
+              {result.skills.map((skill, idx) => (
+                <li key={idx}>{skill}</li>
+              ))}
+            </ul>
+          </section>
+
+          <button className={styles.printBtn} onClick={() => window.print()}>
+            Print Resume
+          </button>
         </div>
       )}
     </div>
