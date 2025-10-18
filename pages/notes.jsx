@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import styles from "../styles/Notes.module.css";
 
 export default function Notes() {
@@ -22,7 +22,7 @@ export default function Notes() {
 
     try {
       const formData = new FormData();
-      formData.append("notes", input);
+      if (input.trim()) formData.append("notes", input);
       if (file) formData.append("file", file);
 
       const res = await fetch("/api/notes", { method: "POST", body: formData });
@@ -30,8 +30,8 @@ export default function Notes() {
 
       if (data.error) setError(data.error);
       else {
-        setSummaries(data.summaries);
-        setFlashcards(data.flashcards);
+        setSummaries(data.summaries || []);
+        setFlashcards(data.flashcards || []);
       }
     } catch {
       setError("Failed to generate. Try again.");
@@ -79,7 +79,7 @@ export default function Notes() {
         <div className={styles.resultCard}>
           <h2 className={styles.resultTitle}>Summaries</h2>
           {summaries.map((sum, i) => (
-            <p key={i}>{sum}</p>
+            <p key={i} className={styles.summaryBlock}>{sum}</p>
           ))}
         </div>
       )}
@@ -94,8 +94,12 @@ export default function Notes() {
                 className={`${styles.flashcard} ${card.flipped ? styles.flipped : ""}`}
                 onClick={() => toggleFlashcard(i)}
               >
-                <div className={styles.front}>{card.question}</div>
-                <div className={styles.back}>{card.answer}</div>
+                <div className={styles.front}>
+                  <p>{card.question}</p>
+                </div>
+                <div className={styles.back}>
+                  <p>{card.answer}</p>
+                </div>
               </div>
             ))}
           </div>
