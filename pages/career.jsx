@@ -126,7 +126,7 @@ export default function Career() {
         <>
           <input type="text" placeholder="Recipient Name / Company" className={styles.input} value={recipient} onChange={handleChange(setRecipient)} disabled={loading} />
           <input type="text" placeholder="Position Applied For" className={styles.input} value={position} onChange={handleChange(setPosition)} disabled={loading} />
-          <textarea placeholder="Cover Letter Paragraphs (1-3)" className={styles.textarea} value={paragraphs} onChange={handleChange(setParagraphs)} rows={6} disabled={loading} />
+          <textarea placeholder="Experience, Skills, and Achievements" className={styles.textarea} value={paragraphs} onChange={handleChange(setParagraphs)} rows={6} disabled={loading} />
         </>
       )}
 
