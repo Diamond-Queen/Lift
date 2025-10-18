@@ -17,24 +17,24 @@ export default function Notes() {
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4">Lift Notes</h1>
+    <div className="container">
+      <h1 className="page-title">Lift Notes</h1>
       <textarea
-        className="w-full border rounded p-3 mb-4"
+        className="textarea"
         rows={8}
         placeholder="Paste your notes here..."
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
       <button
-        className="px-6 py-3 bg-blue-500 text-white rounded hover:bg-blue-600"
+        className="btn-action btn-blue"
         onClick={handleGenerate}
       >
         Generate
       </button>
 
       {summary && (
-        <div className="mt-6 p-4 border rounded bg-gray-50 text-black">
+        <div className="result-card">
           <h2 className="font-bold mb-2">Summary</h2>
           <p>{summary}</p>
           <h2 className="font-bold mt-4 mb-2">Quiz Questions</h2>

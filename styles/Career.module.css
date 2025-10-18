@@ -1,0 +1,9 @@
+.container { padding: 1.5rem; max-width: 42rem; margin-left: auto; margin-right: auto; }
+.pageTitle { font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem; }
+.input { width: 100%; border: 1px solid rgba(15,23,42,0.08); border-radius: 8px; padding: 0.6rem 0.75rem; margin-bottom: 0.5rem; font-size: 1rem; box-sizing: border-box; }
+.textarea { width: 100%; border: 1px solid rgba(15,23,42,0.08); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.75rem; font-size: 1rem; box-sizing: border-box; }
+.btnAction { display: inline-block; padding: 0.65rem 1rem; border-radius: 8px; font-weight: 700; color: white; text-decoration: none; border: none; cursor: pointer; }
+.btnPurple { background: #7c3aed; }
+.resultCard { margin-top: 1.25rem; padding: 1rem; border-radius: 10px; border: 1px solid rgba(2,6,23,0.06); background: rgba(255,255,255,0.95); color: #071133; }
+.muted { opacity: 0.95; }
+.loading { opacity: 0.85; cursor: progress; }

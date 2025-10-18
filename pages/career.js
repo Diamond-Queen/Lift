@@ -1,4 +1,5 @@
 import { useState } from "react";
+import styles from "../styles/Career.module.css";
 
 export default function Career() {
   const [name, setName] = useState("");
@@ -6,58 +7,79 @@ export default function Career() {
   const [skills, setSkills] = useState("");
   const [type, setType] = useState("resume");
   const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleGenerate = async () => {
-    const res = await fetch("/api/career", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, experience, skills, type }),
-    });
-    const data = await res.json();
-    setResult(data.result);
+    setError("");
+    if (!name.trim()) {
+      setError("Please enter your name.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/career", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, experience, skills, type }),
+      });
+      const data = await res.json();
+      setResult(data.result || "");
+    } catch (err) {
+      setError("Failed to generate. Try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4">Lift Career</h1>
+    <div className={styles.container}>
+      <h1 className={styles.pageTitle}>Lift Career</h1>
       <input
         type="text"
         placeholder="Name"
-        className="w-full border rounded p-2 mb-2"
+        className={styles.input}
         value={name}
         onChange={(e) => setName(e.target.value)}
+        disabled={loading}
       />
       <textarea
         placeholder="Experience"
-        className="w-full border rounded p-2 mb-2"
+        className={styles.textarea}
         rows={3}
         value={experience}
         onChange={(e) => setExperience(e.target.value)}
+        disabled={loading}
       />
       <textarea
         placeholder="Skills"
-        className="w-full border rounded p-2 mb-2"
+        className={styles.textarea}
         rows={3}
         value={skills}
         onChange={(e) => setSkills(e.target.value)}
+        disabled={loading}
       />
       <select
-        className="w-full border rounded p-2 mb-4"
+        className={styles.input}
         value={type}
         onChange={(e) => setType(e.target.value)}
+        disabled={loading}
       >
         <option value="resume">Resume</option>
-        <option value="cover">Cover Letter</option>
+  <option value="cover">Cover Letter</option>
       </select>
       <button
-        className="px-6 py-3 bg-purple-500 text-white rounded hover:bg-purple-600"
+        className={`${styles.btnAction} ${styles.btnPurple} ${loading ? styles.loading : ''}`}
         onClick={handleGenerate}
+        disabled={loading}
       >
-        Generate
+        {loading ? 'Generating…' : 'Generate'}
       </button>
 
+      {error && <div style={{ color: 'crimson', marginTop: 8 }}>{error}</div>}
+
       {result && (
-        <div className="mt-6 p-4 border rounded bg-gray-50 text-black">
+        <div className={styles.resultCard}>
           <h2 className="font-bold mb-2">Result</h2>
           <pre>{result}</pre>
         </div>
