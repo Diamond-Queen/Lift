@@ -31,7 +31,9 @@ export default function Notes() {
         setError(data.error);
       } else {
         setSummary(data.summary);
-        setQuiz(data.quiz || []);
+        setQuiz(
+          data.quiz.map((q) => ({ ...q, flipped: false })) // add flip state
+        );
       }
     } catch (err) {
       setError("Failed to generate. Try again.");
@@ -41,6 +43,14 @@ export default function Notes() {
   };
 
   const handleInputChange = useCallback((e) => setInput(e.target.value), []);
+
+  const toggleFlashcard = (index) => {
+    setQuiz((prev) =>
+      prev.map((card, i) =>
+        i === index ? { ...card, flipped: !card.flipped } : card
+      )
+    );
+  };
 
   return (
     <div className={styles.container}>
@@ -68,16 +78,28 @@ export default function Notes() {
         <div className={styles.resultCard}>
           <h2 className={styles.resultTitle}>Summary</h2>
           <p>{summary}</p>
+        </div>
+      )}
 
-          <h2 className={styles.resultTitle}>Quiz Questions</h2>
-          <ol className={styles.quizList}>
-            {quiz.map((q, i) => (
-              <li key={i}>
-                <p><strong>Q:</strong> {q.question}</p>
-                {q.answer && <p><em>A:</em> {q.answer}</p>}
-              </li>
+      {quiz.length > 0 && (
+        <div className={styles.flashcardsContainer}>
+          <h2 className={styles.resultTitle}>Flashcards</h2>
+          <div className={styles.flashcardsGrid}>
+            {quiz.map((card, i) => (
+              <div
+                key={i}
+                className={`${styles.flashcard} ${card.flipped ? styles.flipped : ""}`}
+                onClick={() => toggleFlashcard(i)}
+              >
+                <div className={styles.front}>
+                  <p>{card.question}</p>
+                </div>
+                <div className={styles.back}>
+                  <p>{card.answer}</p>
+                </div>
+              </div>
             ))}
-          </ol>
+          </div>
         </div>
       )}
     </div>
