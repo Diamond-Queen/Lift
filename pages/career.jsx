@@ -185,31 +185,37 @@ export default function Career() {
             </div>
           )}
 
-          {type === "cover" && result && (
-            <div className={styles.printableCover}>
-              <div className={styles.letterhead}>
-                <h1 className={styles.letterName}>{result.name}</h1>
-                {result.email && <p>{result.email}</p>}
-                {result.phone && <p>{result.phone}</p>}
-                {result.address && <p>{result.address}</p>}
-              </div>
-
-              <div className={styles.letterBody}>
-                <p className={styles.date}>{new Date().toLocaleDateString()}</p>
-
-                {result.recipient && <p className={styles.recipient}>{result.recipient}</p>}
-
-                <p>Dear {result.recipient || "Hiring Manager"},</p>
-
-                {result.paragraphs && result.paragraphs.map((para, i) => (
-                  <p key={i}>{para}</p>
-                ))}
-
-                <p>Sincerely,</p>
-                <p><strong>{result.name}</strong></p>
-              </div>
+      {type === "cover" && result && (
+        <div className={styles.printableCover}>
+          <div className={styles.letterhead}>
+            <h1 className={styles.letterName}>{result.name}</h1>
+            <div className={styles.contactRow}>
+              {result.email && <span>{result.email}</span>}
+              {result.phone && <span>• {result.phone}</span>}
+              {result.address && <span>• {result.address}</span>}
             </div>
-          )}
+          </div>
+
+          <div className={styles.letterBody}>
+            <p className={styles.date}>{new Date().toLocaleDateString()}</p>
+
+            {result.recipient && <p className={styles.recipient}>{result.recipient}</p>}
+
+            <p>Dear {result.recipient || "Hiring Manager"},</p>
+
+            {result.paragraphs && result.paragraphs.map((para, i) => (
+              <p key={i}>{para}</p>
+            ))}
+
+            <p>Sincerely,</p>
+            <p><strong>{result.name}</strong></p>
+            <p className={styles.footerContact}>
+              {result.email && <span>{result.email}</span>} {result.phone && <span>• {result.phone}</span>}
+            </p>
+          </div>
+        </div>
+      )}
+
 
 
           <button className={styles.printBtn} onClick={() => window.print()}>
