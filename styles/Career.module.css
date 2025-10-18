@@ -1,130 +1,123 @@
 .container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
   padding: 1.5rem;
   max-width: 42rem;
   margin: 0 auto;
+  font-family: var(--font-sans, Arial, sans-serif);
 }
 
 .pageTitle {
   font-size: 1.75rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  color: var(--muted);
-  font-family: var(--font-heading);
+  color: var(--muted, #ccc);
 }
 
 .input,
-.textarea {
+.textarea,
+select {
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 10px;
   padding: 0.75rem;
+  margin-bottom: 0.75rem;
   font-size: 1rem;
   box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--muted);
-}
-
-.textarea {
-  padding: 0.9rem;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--muted, #ccc);
 }
 
 .btnAction {
   display: inline-block;
-  padding: var(--btn-padding-vert) var(--btn-padding-horiz);
-  border-radius: var(--btn-radius);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
   font-weight: 700;
-  color: var(--accent-contrast);
+  color: var(--accent-contrast, #fff);
+  text-decoration: none;
   border: none;
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(2, 6, 23, 0.12);
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  position: relative;
 }
 
 .btnPurple {
-  background: linear-gradient(90deg, var(--accent) 0%, #b8871f 100%);
+  background: linear-gradient(90deg, var(--accent, #6c63ff) 0%, #b8871f 100%);
 }
 
 .btnAction:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.28);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
 }
 
-.loading {
-  opacity: 0.85;
-  cursor: progress;
-}
-
-.error {
-  color: crimson;
-  margin-top: 0.5rem;
-}
-
-/* Result / resume card */
 .resultCard {
-  position: relative;
-  z-index: 10;
   margin-top: 1.5rem;
   padding: 1.5rem;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.03);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-  color: var(--muted);
+  color: var(--muted, #ccc);
   box-shadow: 0 10px 30px rgba(2, 6, 23, 0.2);
 }
 
-.name {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 0.25rem;
+/* PRINTABLE RESUME & COVER LETTER */
+.printableResume,
+.printableCover {
+  background: #fff;
+  color: #000;
+  padding: 2rem;
+  font-family: "Times New Roman", serif;
+  font-size: 12pt;
+  line-height: 1.4;
 }
 
-.contact {
-  font-size: 1rem;
-  margin-bottom: 1rem;
+.printableResume h1 {
+  font-size: 24pt;
+  margin-bottom: 0.2rem;
 }
 
-.sectionTitle {
-  font-size: 1.1rem;
-  font-weight: 600;
+.printableResume p,
+.printableCover p {
+  margin: 0.2rem 0;
+}
+
+.printableResume h2 {
+  font-size: 14pt;
   margin-top: 1rem;
-  margin-bottom: 0.25rem;
+  border-bottom: 1px solid #333;
+  padding-bottom: 2px;
 }
 
-.job {
-  margin-bottom: 0.75rem;
+.printableResume ul {
+  list-style: disc;
+  margin-left: 1.5rem;
 }
 
-ul {
-  list-style-type: disc;
-  padding-left: 1.5rem;
-  margin: 0;
+.job,
+.education {
+  margin-bottom: 0.5rem;
 }
 
 .printBtn {
-  margin-top: 1.25rem;
+  margin-top: 1rem;
   padding: 0.5rem 1rem;
-  border-radius: 8px;
+  background: var(--accent, #6c63ff);
+  color: #fff;
   border: none;
-  background: var(--accent);
-  color: var(--accent-contrast);
-  font-weight: 600;
+  border-radius: 6px;
   cursor: pointer;
 }
 
-.printBtn:hover {
-  opacity: 0.9;
-}
 @media print {
-  .container {
-    box-shadow: none;
-    margin: 0;
-    max-width: 100%;
-    padding: 0;
+  body * {
+    visibility: hidden;
+  }
+  .printableResume,
+  .printableCover {
+    visibility: visible;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
   }
   .printBtn {
     display: none;
