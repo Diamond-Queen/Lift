@@ -19,7 +19,6 @@ async function extractTextPerBlock(file) {
   ) {
     const buffer = await fs.readFile(file.filepath);
     const pptxData = await extractPptx(buffer); // Extract slides + notes
-    // Combine slide text + notes
     return pptxData.slides
       .map((slide, i) => {
         const note = pptxData.notes[i] || "";
@@ -61,7 +60,7 @@ export default async function handler(req, res) {
       const flashcards = [];
 
       for (const block of notesBlocks) {
-        const truncatedBlock = block.slice(0, 2000); // Prevent token overflow
+        const truncatedBlock = block.slice(0, 2000);
 
         // Summary
         const summaryResp = await client.chat.completions.create({
@@ -89,15 +88,7 @@ export default async function handler(req, res) {
           quiz = JSON.parse(quizResp.choices[0].message.content);
           if (!Array.isArray(quiz)) quiz = [];
         } catch {
-          // fallback parser
-          const lines = quizResp.choices[0].message.content.split("\n");
-          quiz = lines
-            .filter((l) => l.includes("Q:") || l.includes("A:"))
-            .reduce((acc, line) => {
-              if (line.startsWith("Q:")) acc.push({ question: line.slice(2).trim(), answer: "" });
-              else if (line.startsWith("A:") && acc.length) acc[acc.length - 1].answer = line.slice(2).trim();
-              return acc;
-            }, []);
+          quiz = [];
         }
 
         flashcards.push(...quiz.map((q) => ({ ...q, flipped: false })));

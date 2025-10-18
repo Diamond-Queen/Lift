@@ -66,7 +66,7 @@ export default function Notes() {
       />
 
       <button
-        className={`${styles.btnAction} ${styles.btnBlue} ${loading ? styles.loading : ""}`}
+        className={`${styles.btnAction} ${loading ? styles.loading : ""}`}
         onClick={handleGenerate}
         disabled={loading}
       >
@@ -79,7 +79,7 @@ export default function Notes() {
         <div className={styles.resultCard}>
           <h2 className={styles.resultTitle}>Summaries</h2>
           {summaries.map((sum, i) => (
-            <p key={i} className={styles.summaryBlock}>{sum}</p>
+            <p key={i}>{sum}</p>
           ))}
         </div>
       )}
@@ -94,12 +94,8 @@ export default function Notes() {
                 className={`${styles.flashcard} ${card.flipped ? styles.flipped : ""}`}
                 onClick={() => toggleFlashcard(i)}
               >
-                <div className={styles.front}>
-                  <p>{card.question}</p>
-                </div>
-                <div className={styles.back}>
-                  <p>{card.answer}</p>
-                </div>
+                <div className={styles.front}>{card.question}</div>
+                <div className={styles.back}>{card.answer}</div>
               </div>
             ))}
           </div>
@@ -108,4 +104,3 @@ export default function Notes() {
     </div>
   );
 }
-// Note: The corresponding API route handling the POST request is in pages/api/notes.js
