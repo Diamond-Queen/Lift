@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import JSZip from "jszip";
 import styles from "../styles/Notes.module.css";
 
@@ -10,65 +10,19 @@ export default function Notes() {
   const [summaries, setSummaries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const sliderRef = useRef(null);
 
-  // 🔹 Extract text from PPTX
-  const extractTextFromPptx = async (arrayBuffer) => {
-    const zip = await JSZip.loadAsync(arrayBuffer);
-    let text = "";
-
-    const slideFiles = Object.keys(zip.files).filter((f) =>
-      f.match(/^ppt\/slides\/slide\d+\.xml$/)
-    );
-
-    for (const slidePath of slideFiles) {
-      const slideXml = await zip.files[slidePath].async("text");
-      const matches = [...slideXml.matchAll(/<a:t>(.*?)<\/a:t>/g)];
-      matches.forEach((m) => (text += m[1] + "\n"));
-    }
-
-    return text;
-  };
-
-  // 🔹 Extract text from PDF (simple text extraction, browser-only)
-  const extractTextFromPdf = async (file) => {
-    const arrayBuffer = await file.arrayBuffer();
-    const uint8 = new Uint8Array(arrayBuffer);
-    let text = "";
-    // naive string extraction
-    const chunk = String.fromCharCode.apply(null, uint8);
-    text = chunk.replace(/\s+/g, " ");
-    return text;
-  };
-
-  // 🔹 Handle file upload
+  // 🔹 Handle file upload (simplified for now)
   const handleFileChange = async (e) => {
-    setError("");
     const file = e.target.files[0];
     if (!file) return;
 
-    setLoading(true);
     try {
-      let extractedText = "";
-
-      if (file.name.endsWith(".pptx")) {
-        const arrayBuffer = await file.arrayBuffer();
-        extractedText = await extractTextFromPptx(arrayBuffer);
-      } else if (file.name.endsWith(".pdf")) {
-        extractedText = await extractTextFromPdf(file);
-      } else {
-        throw new Error("Unsupported file type.");
-      }
-
-      if (extractedText.trim()) {
-        setInput((prev) => prev + "\n" + extractedText);
-      } else {
-        throw new Error("No readable text found in file.");
-      }
+      const text = await file.text(); // fallback for testing
+      setInput((prev) => prev + "\n" + text);
     } catch (err) {
       console.error(err);
-      setError(err.message || "Failed to extract text.");
-    } finally {
-      setLoading(false);
+      setError("Failed to read file.");
     }
   };
 
@@ -95,11 +49,7 @@ export default function Notes() {
       if (data.error) setError(data.error);
       else {
         setSummaries(data.summaries || []);
-        // Limit flashcards to 12
-        setFlashcards((data.flashcards || []).slice(0, 12).map((fc) => ({
-          ...fc,
-          flipped: false
-        })));
+        setFlashcards(data.flashcards || []);
       }
     } catch (err) {
       console.error(err);
@@ -118,6 +68,14 @@ export default function Notes() {
     );
   };
 
+  // 🔹 Slider controls
+  const slideLeft = () => {
+    if (sliderRef.current) sliderRef.current.scrollBy({ left: -220, behavior: "smooth" });
+  };
+  const slideRight = () => {
+    if (sliderRef.current) sliderRef.current.scrollBy({ left: 220, behavior: "smooth" });
+  };
+
   return (
     <div className={styles.container}>
       <h1 className={styles.pageTitle}>Lift Notes</h1>
@@ -125,25 +83,25 @@ export default function Notes() {
       <textarea
         className={styles.textarea}
         rows={6}
-        placeholder="Paste your notes here or upload a PDF/PPTX..."
+        placeholder="Paste your notes here or upload a file..."
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
 
-      <input
-        type="file"
-        accept=".pdf, .pptx"
-        onChange={handleFileChange}
-        className={styles.fileInput}
-      />
+      <div className={styles.fileGenerateRow}>
+        <label className={styles.fileButton}>
+          Browse Files
+          <input type="file" accept=".pdf,.pptx" onChange={handleFileChange} hidden />
+        </label>
 
-      <button
-        className={`${styles.btnAction} ${loading ? styles.loading : ""}`}
-        onClick={handleGenerate}
-        disabled={loading}
-      >
-        {loading ? "Generating…" : "Generate"}
-      </button>
+        <button
+          className={`${styles.generateButton} ${loading ? styles.loading : ""}`}
+          onClick={handleGenerate}
+          disabled={loading}
+        >
+          {loading ? "Generating…" : "Generate"}
+        </button>
+      </div>
 
       {error && <div className={styles.error}>{error}</div>}
 
@@ -159,23 +117,25 @@ export default function Notes() {
       {flashcards.length > 0 && (
         <div className={styles.flashcardsContainer}>
           <h2 className={styles.resultTitle}>Flashcards</h2>
-          <div className={styles.flashcardsSlider}>
-            {flashcards.map((card, i) => (
-              <div
-                key={i}
-                className={`${styles.flashcard} ${
-                  card.flipped ? styles.flipped : ""
-                }`}
-                onClick={() => toggleFlashcard(i)}
-              >
-                <div className={styles.front}>
-                  <p>{card.question}</p>
+          <div className={styles.sliderWrapper}>
+            <button className={styles.arrowLeft} onClick={slideLeft}>&lt;</button>
+            <div className={styles.flashcardsSlider} ref={sliderRef}>
+              {flashcards.map((card, i) => (
+                <div
+                  key={i}
+                  className={`${styles.flashcard} ${card.flipped ? styles.flipped : ""}`}
+                  onClick={() => toggleFlashcard(i)}
+                >
+                  <div className={styles.front}>
+                    <p>{card.question}</p>
+                  </div>
+                  <div className={styles.back}>
+                    <p>{card.answer}</p>
+                  </div>
                 </div>
-                <div className={styles.back}>
-                  <p>{card.answer}</p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            <button className={styles.arrowRight} onClick={slideRight}>&gt;</button>
           </div>
         </div>
       )}
