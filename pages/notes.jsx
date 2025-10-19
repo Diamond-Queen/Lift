@@ -11,19 +11,47 @@ export default function Notes() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 🔹 Handle file upload (PPTX/PDF extraction simplified for testing)
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  //Handle file upload (PPTX/PDF extraction simplified for testing)
+  
+      const handleFileChange = async (e) => {
+        setError("");
+        const file = e.target.files[0];
+        if (!file) return;
 
-    try {
-      const text = await file.text(); // simple fallback, replace with proper parser if needed
-      setInput((prev) => prev + "\n" + text);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to read file.");
-    }
-  };
+        setLoading(true);
+        try {
+          let extractedText = "";
+
+          // Identify file type
+          if (
+            file.type ===
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+          ) {
+            const arrayBuffer = await file.arrayBuffer();
+            extractedText = await extractTextFromPptx(arrayBuffer);
+          } else if (file.type === "application/pdf") {
+            extractedText = await extractTextFromPdf(file);
+          } else {
+            throw new Error("Unsupported file type.");
+          }
+
+          // Only add extracted content — not the file path
+          if (extractedText.trim()) {
+            setInput((prev) => prev.trim() + "\n\n" + extractedText.trim());
+          } else {
+            throw new Error("No readable text found in file.");
+          }
+
+          // Clear file input value so same file can be reuploaded later
+          e.target.value = "";
+        } catch (err) {
+          console.error(err);
+          setError(err.message || "Failed to extract text.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
 
   // 🔹 Generate summaries + flashcards
   const handleGenerate = async () => {
