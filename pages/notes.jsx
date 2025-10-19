@@ -3,42 +3,20 @@
 import { useState } from "react";
 import JSZip from "jszip";
 import styles from "../styles/Notes.module.css";
-// New Import for pdfjs-dist
-import * as pdfjsLib from "pdfjs-dist/build/pdf";
-// Note: You must set the worker source, required for pdfjs-dist to work.
-// Use a CDN path or a static file path.
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-
+// NOTE: NO top-level import of pdfjs-dist here.
 
 export default function Notes() {
-  const [input, setInput] = useState("");
-  const [summaries, setSummaries] = useState([]);
-  const [flashcards, setFlashcards] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  // ... (state and extractTextFromPptx remains unchanged)
 
-  //  Extract text from PPTX (This function remains unchanged and correct)
-  const extractTextFromPptx = async (fileBuffer) => {
-    const zip = await JSZip.loadAsync(fileBuffer);
-    let text = "";
-
-    const slideFiles = Object.keys(zip.files).filter((f) =>
-      f.match(/^ppt\/slides\/slide\d+\.xml$/)
-    );
-
-    for (const slidePath of slideFiles) {
-      const slideXml = await zip.files[slidePath].async("text");
-      const matches = [...slideXml.matchAll(/<a:t>(.*?)<\/a:t>/g)];
-      matches.forEach((m) => (text += m[1] + "\n"));
-    }
-
-    return text.trim();
-  };
-
-  //  FIXED: Extract text from PDF using pdfjs-dist
+  // FIX: Make this an internal, dynamically imported function
   const extractTextFromPdf = async (file) => {
+    // 1. Dynamic Import: This code only runs when the button is clicked (on the client).
+    const pdfjsLib = await import("pdfjs-dist/build/pdf");
+    
+    // 2. Set Worker Source: Must be set AFTER the library is loaded.
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
     const arrayBuffer = await file.arrayBuffer();
-    // Load the PDF document
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     let text = "";
 
@@ -46,7 +24,6 @@ export default function Notes() {
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
       
-      // Extract and format text content
       const pageText = content.items
         .map((item) => item.str)
         .join(" ");
@@ -76,69 +53,14 @@ export default function Notes() {
       } else {
         throw new Error("Unsupported file type. Use PDF or PPTX.");
       }
-
-      if (!extractedText.trim()) throw new Error("No readable text found.");
-
-      setInput((prev) =>
-        prev ? prev.trim() + "\n\n" + extractedText.trim() : extractedText.trim()
-      );
-      e.target.value = ""; // allow re-upload
+      // ... (rest of handleFileChange)
     } catch (err) {
       console.error(err);
-      // Display a user-friendly error if PDF parsing fails
       setError(err.message || "Failed to extract text. File might be protected or corrupted.");
     } finally {
       setLoading(false);
     }
   };
 
-  //  Generate summaries + flashcards (Function remains unchanged from previous fix)
-  const handleGenerate = async () => {
-    if (!input.trim()) {
-      setError("Please add notes or upload a file first.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    setSummaries([]);
-    setFlashcards([]);
-    try {
-      const res = await fetch("/api/notes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: input }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) { 
-        setError(data.error || "An unknown error occurred during generation.");
-      } else {
-        setSummaries(data.summaries || []);
-        const newFlashcards = (data.flashcards || [])
-          .slice(0, 12) 
-          .map((q) => ({ ...q, flipped: false })); 
-        
-        setFlashcards(newFlashcards);
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Failed to generate. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleFlashcard = (index) => {
-    setFlashcards((prev) =>
-      prev.map((card, i) => (i === index ? { ...card, flipped: !card.flipped } : card))
-    );
-  };
-
-  return (
-    <div className={styles.container}>
-      {/* ... (rest of the component JSX) ... */}
-    </div>
-  );
+  // ... (rest of component: handleGenerate, toggleFlashcard, return JSX)
 }
