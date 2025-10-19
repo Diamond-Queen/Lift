@@ -36,89 +36,72 @@ export default function Notes() {
   // ---------------------------------------------------
   // PDF extraction (simple, browser-only fallback)
   // ---------------------------------------------------
-  // NOTE: this is a heuristic that works for many text-based PDFs.
-  // It's not as reliable as pdf.js but avoids server/worker issues.
-  const extractTextFromPdf = async (file) => {
-    const arrayBuffer = await file.arrayBuffer();
-    // Try to decode as UTF-8 text first (many PDFs embed text streams)
-    try {
-      const decoder = new TextDecoder("utf-8");
-      let raw = decoder.decode(arrayBuffer);
-      // Remove long sequences of binary garbage - keep printable ranges
-      // Replace <>[](){} etc that are common in PDF binary parts with spaces
-      raw = raw.replace(/[\x00-\x1F\x7F-\x9F]+/g, " ");
-      // Try to extract readable words groups - some PDFs include the text as-is
-      const words = raw.match(/[A-Za-z0-9][A-Za-z0-9\-\_\.,;:'"() ]{1,200}/g);
-      if (words && words.length) {
-        // Join the biggest chunks to produce a reasonable "text"
-        return words.slice(0, 2000).join(" ").replace(/\s{2,}/g, " ").trim();
-      }
-    } catch (err) {
-      // ignore and fallback to naive approach below
-      console.warn("utf-8 decode fallback failed", err);
+// --- PDF extractor function (place this ABOVE handleFileChange) ---
+const extractTextFromPdf = async (file) => {
+  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf");
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+  let text = "";
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map((item) => item.str).join(" ");
+    text += pageText + "\n\n"; // space between pages
+  }
+
+  return text.trim();
+};
+
+// --- Your file handler ---
+const handleFileChange = async (e) => {
+  setError("");
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  setLoading(true);
+  try {
+    let extractedText = "";
+
+    // PPTX support
+    if (file.name.toLowerCase().endsWith(".pptx")) {
+      const buffer = await file.arrayBuffer();
+      extractedText = await extractTextFromPptx(buffer);
     }
 
-    // Final fallback: attempt to interpret as Latin1-ish
-    try {
-      let binary = "";
-      const uint8 = new Uint8Array(arrayBuffer);
-      // build string in chunks to avoid stack limits
-      const chunk = 0x8000;
-      for (let i = 0; i < uint8.length; i += chunk) {
-        const sub = uint8.subarray(i, i + chunk);
-        binary += String.fromCharCode.apply(null, sub);
-      }
-      // strip lots of non-printable characters
-      let cleaned = binary.replace(/[\x00-\x1F\x7F-\x9F]+/g, " ");
-      cleaned = cleaned.replace(/\s{2,}/g, " ").trim();
-      // return first useful part
-      return cleaned.slice(0, 20000);
-    } catch (err) {
-      console.error("PDF extraction fallback failed", err);
-      return "";
+    //  PDF support
+    else if (file.name.toLowerCase().endsWith(".pdf")) {
+      extractedText = await extractTextFromPdf(file);
     }
-  };
 
-  // -------------------------
-  // File input handler
-  // -------------------------
-  const handleFileChange = async (e) => {
-    setError("");
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setLoading(true);
-    try {
-      let extractedText = "";
-
-      // PPTX
-      if (file.name.toLowerCase().endsWith(".pptx")) {
-        const buffer = await file.arrayBuffer();
-        extractedText = await extractTextFromPptx(buffer);
-      }
-      // PDF
-      else if (file.name.toLowerCase().endsWith(".pdf")) {
-        extractedText = await extractTextFromPdf(file);
-      } else {
-        throw new Error("Unsupported file type. Use PDF or PPTX.");
-      }
-
-      if (!extractedText || !extractedText.trim()) {
-        throw new Error("No readable text found in file.");
-      }
-
-      // Append extracted text to textarea (don't insert file path)
-      setInput((prev) => (prev ? prev.trim() + "\n\n" + extractedText.trim() : extractedText.trim()));
-
-      // reset the file input so user can re-upload same file later if needed
-      e.target.value = "";
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Failed to extract text from file.");
-    } finally {
-      setLoading(false);
+    //  Unsupported file
+    else {
+      throw new Error("Unsupported file type. Use PDF or PPTX.");
     }
-  };
+
+    if (!extractedText || !extractedText.trim()) {
+      throw new Error("No readable text found in file.");
+    }
+
+    // Append extracted text to textarea (not file path)
+    setInput((prev) =>
+      prev ? prev.trim() + "\n\n" + extractedText.trim() : extractedText.trim()
+    );
+
+    //  Allow re-upload of same file
+    e.target.value = "";
+  } catch (err) {
+    console.error(err);
+    setError(err.message || "Failed to extract text from file.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // -------------------------
   // Generate summary + flashcards
