@@ -11,57 +11,126 @@ export default function Notes() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  //Handle file upload (PPTX/PDF extraction simplified for testing)
-  
-      const handleFileChange = async (e) => {
-        setError("");
-        const file = e.target.files[0];
-        if (!file) return;
+  // -------------------------
+  // PPTX extraction (JSZip)
+  // -------------------------
+  const extractTextFromPptx = async (arrayBuffer) => {
+    const zip = await JSZip.loadAsync(arrayBuffer);
+    let text = "";
 
-        setLoading(true);
-        try {
-          let extractedText = "";
+    const slideFiles = Object.keys(zip.files).filter((f) =>
+      /^ppt\/slides\/slide\d+\.xml$/.test(f)
+    );
 
-          // Identify file type
-          if (
-            file.type ===
-            "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-          ) {
-            const arrayBuffer = await file.arrayBuffer();
-            extractedText = await extractTextFromPptx(arrayBuffer);
-          } else if (file.type === "application/pdf") {
-            extractedText = await extractTextFromPdf(file);
-          } else {
-            throw new Error("Unsupported file type.");
-          }
+    for (const slidePath of slideFiles) {
+      const slideXml = await zip.files[slidePath].async("text");
+      // grab text nodes <a:t>...</a:t>
+      const matches = [...slideXml.matchAll(/<a:t>(.*?)<\/a:t>/g)];
+      matches.forEach((m) => {
+        text += m[1] + "\n";
+      });
+    }
+    return text.trim();
+  };
 
-          // Only add extracted content — not the file path
-          if (extractedText.trim()) {
-            setInput((prev) => prev.trim() + "\n\n" + extractedText.trim());
-          } else {
-            throw new Error("No readable text found in file.");
-          }
+  // ---------------------------------------------------
+  // PDF extraction (simple, browser-only fallback)
+  // ---------------------------------------------------
+  // NOTE: this is a heuristic that works for many text-based PDFs.
+  // It's not as reliable as pdf.js but avoids server/worker issues.
+  const extractTextFromPdf = async (file) => {
+    const arrayBuffer = await file.arrayBuffer();
+    // Try to decode as UTF-8 text first (many PDFs embed text streams)
+    try {
+      const decoder = new TextDecoder("utf-8");
+      let raw = decoder.decode(arrayBuffer);
+      // Remove long sequences of binary garbage - keep printable ranges
+      // Replace <>[](){} etc that are common in PDF binary parts with spaces
+      raw = raw.replace(/[\x00-\x1F\x7F-\x9F]+/g, " ");
+      // Try to extract readable words groups - some PDFs include the text as-is
+      const words = raw.match(/[A-Za-z0-9][A-Za-z0-9\-\_\.,;:'"() ]{1,200}/g);
+      if (words && words.length) {
+        // Join the biggest chunks to produce a reasonable "text"
+        return words.slice(0, 2000).join(" ").replace(/\s{2,}/g, " ").trim();
+      }
+    } catch (err) {
+      // ignore and fallback to naive approach below
+      console.warn("utf-8 decode fallback failed", err);
+    }
 
-          // Clear file input value so same file can be reuploaded later
-          e.target.value = "";
-        } catch (err) {
-          console.error(err);
-          setError(err.message || "Failed to extract text.");
-        } finally {
-          setLoading(false);
-        }
-      };
+    // Final fallback: attempt to interpret as Latin1-ish
+    try {
+      let binary = "";
+      const uint8 = new Uint8Array(arrayBuffer);
+      // build string in chunks to avoid stack limits
+      const chunk = 0x8000;
+      for (let i = 0; i < uint8.length; i += chunk) {
+        const sub = uint8.subarray(i, i + chunk);
+        binary += String.fromCharCode.apply(null, sub);
+      }
+      // strip lots of non-printable characters
+      let cleaned = binary.replace(/[\x00-\x1F\x7F-\x9F]+/g, " ");
+      cleaned = cleaned.replace(/\s{2,}/g, " ").trim();
+      // return first useful part
+      return cleaned.slice(0, 20000);
+    } catch (err) {
+      console.error("PDF extraction fallback failed", err);
+      return "";
+    }
+  };
 
+  // -------------------------
+  // File input handler
+  // -------------------------
+  const handleFileChange = async (e) => {
+    setError("");
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  // 🔹 Generate summaries + flashcards
+    setLoading(true);
+    try {
+      let extractedText = "";
+
+      // PPTX
+      if (file.name.toLowerCase().endsWith(".pptx")) {
+        const buffer = await file.arrayBuffer();
+        extractedText = await extractTextFromPptx(buffer);
+      }
+      // PDF
+      else if (file.name.toLowerCase().endsWith(".pdf")) {
+        extractedText = await extractTextFromPdf(file);
+      } else {
+        throw new Error("Unsupported file type. Use PDF or PPTX.");
+      }
+
+      if (!extractedText || !extractedText.trim()) {
+        throw new Error("No readable text found in file.");
+      }
+
+      // Append extracted text to textarea (don't insert file path)
+      setInput((prev) => (prev ? prev.trim() + "\n\n" + extractedText.trim() : extractedText.trim()));
+
+      // reset the file input so user can re-upload same file later if needed
+      e.target.value = "";
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to extract text from file.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // -------------------------
+  // Generate summary + flashcards
+  // -------------------------
   const handleGenerate = async () => {
+    setError("");
     if (!input.trim()) {
-      setError("Please add notes or upload a file first.");
+      setError("Please paste notes or upload a file first.");
       return;
     }
 
     setLoading(true);
-    setError("");
     setSummaries([]);
     setFlashcards([]);
 
@@ -73,10 +142,12 @@ export default function Notes() {
       });
 
       const data = await res.json();
-      if (data.error) setError(data.error);
-      else {
+      if (data.error) {
+        setError(data.error);
+      } else {
         setSummaries(data.summaries || []);
-        setFlashcards(data.flashcards || []);
+        // ensure each card has flipped prop
+        setFlashcards((data.flashcards || []).slice(0, 12).map((f) => ({ ...f, flipped: false })));
       }
     } catch (err) {
       console.error(err);
@@ -86,14 +157,16 @@ export default function Notes() {
     }
   };
 
+  // -------------------------
+  // Flashcard flip (in-place)
+  // -------------------------
   const toggleFlashcard = (index) => {
-    setFlashcards((prev) =>
-      prev.map((card, i) =>
-        i === index ? { ...card, flipped: !card.flipped } : card
-      )
-    );
+    setFlashcards((prev) => prev.map((c, i) => (i === index ? { ...c, flipped: !c.flipped } : c)));
   };
 
+  // -------------------------
+  // Render
+  // -------------------------
   return (
     <div className={styles.container}>
       <h1 className={styles.pageTitle}>Lift Notes</h1>
@@ -101,22 +174,18 @@ export default function Notes() {
       <textarea
         className={styles.textarea}
         rows={6}
-        placeholder="Paste your notes here or upload a file..."
+        placeholder="Paste your notes here or upload a PDF/PPTX..."
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
 
-      <div className={styles.fileGenerateRow}>
+      <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
         <label className={styles.fileButton}>
           Browse Files
           <input type="file" accept=".pdf,.pptx" onChange={handleFileChange} hidden />
         </label>
 
-        <button
-          className={`${styles.generateButton} ${loading ? styles.loading : ""}`}
-          onClick={handleGenerate}
-          disabled={loading}
-        >
+        <button className={`${styles.generateButton} ${loading ? styles.loading : ""}`} onClick={handleGenerate} disabled={loading}>
           {loading ? "Generating…" : "Generate"}
         </button>
       </div>
@@ -126,8 +195,8 @@ export default function Notes() {
       {summaries.length > 0 && (
         <div className={styles.resultCard}>
           <h2 className={styles.resultTitle}>Summaries</h2>
-          {summaries.map((sum, i) => (
-            <p key={i}>{sum}</p>
+          {summaries.map((s, idx) => (
+            <p key={idx}>{s}</p>
           ))}
         </div>
       )}
