@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import JSZip from "jszip";
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
-import pdfWorker from "pdfjs-dist/legacy/build/pdf.worker.entry";
 import styles from "../styles/Notes.module.css";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+// PDF.js will only load in the browser
+let pdfjsLib;
+if (typeof window !== "undefined") {
+  pdfjsLib = require("pdfjs-dist/legacy/build/pdf");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+}
 
 export default function Notes() {
   const [input, setInput] = useState("");
@@ -15,7 +18,21 @@ export default function Notes() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 🔹 Extract text from PPTX
+  // 🔹 PDF text extraction
+  const extractTextFromPdf = async (file) => {
+    if (!pdfjsLib) throw new Error("PDF.js not loaded in browser");
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let text = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map((item) => item.str).join(" ") + "\n";
+    }
+    return text;
+  };
+
+  // 🔹 PPTX text extraction
   const extractTextFromPptx = async (file) => {
     const zip = await JSZip.loadAsync(file);
     let text = "";
@@ -30,19 +47,6 @@ export default function Notes() {
     return text;
   };
 
-  // 🔹 Extract text from PDF
-  const extractTextFromPdf = async (file) => {
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    let text = "";
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      text += content.items.map((item) => item.str).join(" ") + "\n";
-    }
-    return text;
-  };
-
   // 🔹 Handle file upload
   const handleFileChange = async (e) => {
     setError("");
@@ -53,20 +57,20 @@ export default function Notes() {
     try {
       let extractedText = "";
 
-      if (
+      if (file.type === "application/pdf") {
+        extractedText = await extractTextFromPdf(file);
+      } else if (
         file.type ===
         "application/vnd.openxmlformats-officedocument.presentationml.presentation"
       ) {
-        const arrayBuffer = await file.arrayBuffer();
-        extractedText = await extractTextFromPptx(arrayBuffer);
-      } else if (file.type === "application/pdf") {
-        extractedText = await extractTextFromPdf(file);
+        extractedText = await extractTextFromPptx(file);
       } else {
-        throw new Error("Unsupported file type.");
+        throw new Error("Unsupported file type");
       }
 
-      if (extractedText.trim()) setInput((prev) => prev + "\n" + extractedText);
-      else throw new Error("No readable text found in file.");
+      if (!extractedText.trim()) throw new Error("No readable text found in file.");
+
+      setInput((prev) => prev + "\n" + extractedText);
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to extract text.");
@@ -95,12 +99,13 @@ export default function Notes() {
       });
 
       const data = await res.json();
+
       if (data.error) setError(data.error);
       else {
         setSummaries(data.summaries || []);
-        // Ensure flashcards have flipped state
+        // Ensure each flashcard has a flipped property
         setFlashcards(
-          (data.flashcards || []).map((c) => ({ ...c, flipped: false }))
+          (data.flashcards || []).map((f) => ({ ...f, flipped: false }))
         );
       }
     } catch (err) {
@@ -127,14 +132,14 @@ export default function Notes() {
       <textarea
         className={styles.textarea}
         rows={6}
-        placeholder="Paste your notes here or upload a file..."
+        placeholder="Paste your notes here or upload a PDF/PPTX..."
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
 
       <input
         type="file"
-        accept=".pptx,.pdf"
+        accept=".pdf,.pptx"
         onChange={handleFileChange}
         className={styles.fileInput}
       />
