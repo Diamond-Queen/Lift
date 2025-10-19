@@ -39,8 +39,7 @@ export default function NotesUI() {
     const pdfjsLib = await import("pdfjs-dist/build/pdf");
     
     // 2. Set Worker Source: Required for pdfjs-dist to work
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     let text = "";
