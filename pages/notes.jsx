@@ -30,8 +30,8 @@ export default function Notes() {
 
       if (data.error) setError(data.error);
       else {
-        setSummaries(data.summaries || []);
-        setFlashcards(data.flashcards || []);
+        setSummaries(data.summaries);
+        setFlashcards(data.flashcards);
       }
     } catch (e) {
       console.error("Frontend fetch error:", e);
@@ -80,13 +80,13 @@ export default function Notes() {
         <div className={styles.resultCard}>
           <h2 className={styles.resultTitle}>Summaries</h2>
           {summaries.map((sum, i) => (
-            <p key={i}>{sum}</p>
+            <p key={i} className={styles.summaryBlock}>{sum}</p>
           ))}
         </div>
       )}
 
       {flashcards.length > 0 && (
-        <div className={styles.resultCard}>
+        <div className={styles.flashcardsContainer}>
           <h2 className={styles.resultTitle}>Flashcards</h2>
           <div className={styles.flashcardsGrid}>
             {flashcards.map((card, i) => (
