@@ -3,28 +3,34 @@ import OpenAI from "openai";
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
-  const { notes } = req.body;
-  if (!notes || !notes.trim()) return res.status(400).json({ error: "Notes required" });
+  if (req.method !== "POST")
+    return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    const truncated = notes.slice(0, 3000); // keep token limits in mind
+    const { notes } = req.body;
+    if (!notes || !notes.trim()) return res.status(400).json({ error: "Notes required" });
 
-    // 1️⃣ Generate summary
+    // --- Summarize notes ---
     const summaryResp = await client.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [{ role: "user", content: `Summarize clearly:\n\n${truncated}` }],
+      messages: [{ role: "user", content: `Summarize clearly:\n\n${notes}` }],
     });
+
     const summary = summaryResp.choices[0].message.content;
 
-    // 2️⃣ Generate flashcards, forcing valid JSON output
+    // --- Generate 12 flashcards ---
     const flashcardsResp = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "user",
-          content: `Create 3-5 flashcards from the following text. Respond **ONLY** with valid JSON array: [{"question": "...","answer": "..."}]. Do not include any other text.\n\nText:\n${truncated}`,
+          content: `Create exactly 12 flashcards from the following text. Respond ONLY with valid JSON in this format:
+[
+  {"question":"...","answer":"..."},
+  ...
+]
+Text:
+${notes}`
         },
       ],
     });
@@ -37,12 +43,12 @@ export default async function handler(req, res) {
       flashcards = [];
     }
 
-    // Always ensure flipped property for frontend
+    // Add flipped property for frontend
     flashcards = flashcards.map((f) => ({ ...f, flipped: false }));
 
     res.status(200).json({ summaries: [summary], flashcards });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to generate. " + err.message });
+    res.status(500).json({ error: err.message });
   }
 }

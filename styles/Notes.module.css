@@ -1,89 +1,27 @@
-.container {
-  padding: 1.5rem;
-  max-width: 42rem;
-  margin: auto;
-  font-family: var(--font-body);
-}
-
-.pageTitle {
-  font-size: 1.75rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  color: var(--muted);
-  font-family: var(--font-heading);
-}
-
-.textarea {
-  width: 100%;
-  border: 1px solid rgba(255,255,255,0.04);
-  border-radius: 10px;
-  padding: 0.9rem;
-  margin-bottom: 0.75rem;
-  font-size: 1rem;
-  background: rgba(255,255,255,0.02);
-  color: var(--muted);
-  resize: vertical;
-}
-
-.fileInput {
-  margin-bottom: 1rem;
-}
-
-.btnAction {
-  padding: 0.8rem 1.4rem;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
-  color: #fff;
-  background: linear-gradient(90deg,#6a5af9,#b8871f);
-  margin-bottom: 1rem;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.btnAction:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
-}
-
-.loading {
-  opacity: 0.7;
-  cursor: progress;
-}
-
-.error {
-  color: crimson;
-  margin-bottom: 0.5rem;
-}
-
-.resultCard {
-  margin-top: 1.25rem;
-  padding: 1.25rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.03);
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  color: var(--muted);
-  box-shadow: 0 10px 30px rgba(2,6,23,0.2);
-}
-
-.resultTitle {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--accent);
-}
-
-/* Flashcards */
 .flashcardsContainer {
   margin-top: 1.5rem;
 }
 
-.flashcardsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
+.flashcardsSlider {
+  display: flex;
+  overflow-x: auto;
+  gap: 0.5rem; /* reduce spacing */
+  scroll-snap-type: x mandatory;
+  padding-bottom: 0.5rem;
+}
+
+.flashcardsSlider::-webkit-scrollbar {
+  height: 6px;
+}
+
+.flashcardsSlider::-webkit-scrollbar-thumb {
+  background-color: rgba(255,255,255,0.2);
+  border-radius: 3px;
 }
 
 .flashcard {
+  flex: 0 0 200px; /* card width */
+  scroll-snap-align: start;
   perspective: 1000px;
   cursor: pointer;
 }
@@ -92,7 +30,7 @@
   width: 100%;
   min-height: 120px;
   border-radius: 10px;
-  padding: 1rem;
+  padding: 0.8rem;
   background: rgba(255,255,255,0.02);
   color: var(--muted);
   backface-visibility: hidden;
