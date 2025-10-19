@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-// REMOVED: JSZip (since PPTX is removed)
-// REMOVED: pdfjs-dist (since PDF is removed)
+import JSZip from "jszip";
+// REMOVED: pdfjs-dist top-level import (handled dynamically)
 
-// Assuming your CSS path is now correct:
+// Assuming your CSS path is correct now
 import styles from "../styles/Notes.module.css"; 
 
 
@@ -15,16 +15,89 @@ export default function NotesUI() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // REMOVED: extractTextFromPptx (temporarily)
-  // REMOVED: extractTextFromPdf (temporarily)
+  //  ✅ PPTX Processor (Uses JSZip)
+  const extractTextFromPptx = async (fileBuffer) => {
+    const zip = await JSZip.loadAsync(fileBuffer);
+    let text = "";
 
-  // REMOVED: handleFileChange (temporarily)
+    const slideFiles = Object.keys(zip.files).filter((f) =>
+      f.match(/^ppt\/slides\/slide\d+\.xml$/)
+    );
 
+    for (const slidePath of slideFiles) {
+      const slideXml = await zip.files[slidePath].async("text");
+      const matches = [...slideXml.matchAll(/<a:t>(.*?)<\/a:t>/g)];
+      matches.forEach((m) => (text += m[1] + "\n"));
+    }
 
-  //  Generate summaries + flashcards (API call remains the core logic)
+    return text.trim();
+  };
+
+  //  ✅ PDF Processor (Uses dynamic pdfjs-dist import)
+  const extractTextFromPdf = async (file) => {
+    // 1. Dynamic Import: Safe because it runs only after user interaction
+    const pdfjsLib = await import("pdfjs-dist/build/pdf");
+    
+    // 2. Set Worker Source: Required for pdfjs-dist to work
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let text = "";
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      
+      const pageText = content.items
+        .map((item) => item.str)
+        .join(" ");
+
+      text += pageText + "\n\n";
+    }
+
+    return text.trim();
+  };
+
+  //  ✅ Handle file uploads
+  const handleFileChange = async (e) => {
+    setError("");
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    try {
+      let extractedText = "";
+
+      if (file.name.toLowerCase().endsWith(".pptx")) {
+        const buffer = await file.arrayBuffer();
+        extractedText = await extractTextFromPptx(buffer);
+      } else if (file.name.toLowerCase().endsWith(".pdf")) {
+        // Calls the new, robust PDF extraction function
+        extractedText = await extractTextFromPdf(file);
+      } else {
+        throw new Error("Unsupported file type. Use PDF or PPTX.");
+      }
+
+      if (!extractedText.trim()) throw new Error("No readable text found.");
+
+      setInput((prev) =>
+        prev ? prev.trim() + "\n\n" + extractedText.trim() : extractedText.trim()
+      );
+      e.target.value = ""; // allow re-upload
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to extract text. File might be protected or corrupted.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //  Generate summaries + flashcards (Logic remains unchanged)
   const handleGenerate = async () => {
     if (!input.trim()) {
-      setError("Please add notes first.");
+      // Updated error to include files again
+      setError("Please add notes or upload a file first."); 
       return;
     }
 
@@ -33,8 +106,7 @@ export default function NotesUI() {
     setSummaries([]);
     setFlashcards([]);
     try {
-      // API Path Check: Must be correct for your setup
-      const res = await fetch("/api/notes", { 
+      const res = await fetch("/api/notes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notes: input }),
@@ -73,21 +145,32 @@ export default function NotesUI() {
       <textarea
         className={styles.textarea}
         rows={6}
-        placeholder="Paste your notes here..." 
+        placeholder="Paste your notes here or upload a file..."
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
 
-      {/* REMOVED: File Input (temporarily) */}
+      {/* ✅ ADDED: File Input and Generate Button Row */}
+      <div className={styles.fileGenerateRow}>
+        <label htmlFor="file-upload" className={styles.fileButton}>
+          Upload File (.pdf, .pptx)
+        </label>
+        <input
+          id="file-upload"
+          type="file"
+          accept=".pdf, .pptx"
+          onChange={handleFileChange}
+          className={styles.hiddenFileInput}
+        />
 
-      <button
-        // Use the CSS class that exists for the button
-        className={`${styles.generateButton} ${loading ? styles.loading : ""}`} 
-        onClick={handleGenerate}
-        disabled={loading}
-      >
-        {loading ? "Generating…" : "Generate"}
-      </button>
+        <button
+          className={`${styles.generateButton} ${loading ? styles.loading : ""}`}
+          onClick={handleGenerate}
+          disabled={loading}
+        >
+          {loading ? "Generating…" : "Generate"}
+        </button>
+      </div>
 
       {error && <div className={styles.error}>{error}</div>}
 
