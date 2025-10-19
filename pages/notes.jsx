@@ -22,7 +22,7 @@ export default function Notes() {
 
     try {
       const formData = new FormData();
-      if (input.trim()) formData.append("notes", input);
+      formData.append("notes", input);
       if (file) formData.append("file", file);
 
       const res = await fetch("/api/notes", { method: "POST", body: formData });
@@ -33,7 +33,8 @@ export default function Notes() {
         setSummaries(data.summaries || []);
         setFlashcards(data.flashcards || []);
       }
-    } catch {
+    } catch (e) {
+      console.error("Frontend fetch error:", e);
       setError("Failed to generate. Try again.");
     } finally {
       setLoading(false);
@@ -66,7 +67,7 @@ export default function Notes() {
       />
 
       <button
-        className={`${styles.btnAction} ${loading ? styles.loading : ""}`}
+        className={`${styles.btnAction} ${styles.btnBlue} ${loading ? styles.loading : ""}`}
         onClick={handleGenerate}
         disabled={loading}
       >
@@ -79,13 +80,13 @@ export default function Notes() {
         <div className={styles.resultCard}>
           <h2 className={styles.resultTitle}>Summaries</h2>
           {summaries.map((sum, i) => (
-            <p key={i} className={styles.summaryBlock}>{sum}</p>
+            <p key={i}>{sum}</p>
           ))}
         </div>
       )}
 
       {flashcards.length > 0 && (
-        <div className={styles.flashcardsContainer}>
+        <div className={styles.resultCard}>
           <h2 className={styles.resultTitle}>Flashcards</h2>
           <div className={styles.flashcardsGrid}>
             {flashcards.map((card, i) => (
