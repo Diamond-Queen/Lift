@@ -11,7 +11,7 @@ export default function Notes() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 🔹 Extract text from PPTX manually
+  //  Extract text from PPTX manually
   const extractTextFromPptx = async (file) => {
     const zip = await JSZip.loadAsync(file);
     let text = "";
@@ -29,7 +29,7 @@ export default function Notes() {
     return text.trim();
   };
 
-  // 🔹 Extract text from PDF manually
+  //  Extract text from PDF manually
   const extractTextFromPdf = async (file) => {
     const arrayBuffer = await file.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
@@ -47,7 +47,7 @@ export default function Notes() {
     return text.replace(/[\x00-\x1F]+/g, " ").trim();
   };
 
-  // 🔹 Handle file uploads
+  //  Handle file uploads
   const handleFileChange = async (e) => {
     setError("");
     const file = e.target.files?.[0];
@@ -80,7 +80,7 @@ export default function Notes() {
     }
   };
 
-  // 🔹 Generate summaries + flashcards
+  //  Generate summaries + flashcards
   const handleGenerate = async () => {
     if (!input.trim()) {
       setError("Please add notes or upload a file first.");
