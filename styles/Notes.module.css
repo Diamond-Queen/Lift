@@ -101,47 +101,25 @@
   color: #6a5af9;
 }
 
-
+/* Flashcards */
 .flashcardsContainer {
   margin-top: 2rem;
 }
 
-.sliderWrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
 .flashcardsSlider {
   display: flex;
+  overflow-x: auto;
   gap: 1rem;
-  overflow-x: hidden;
-  scroll-behavior: smooth;
-  padding: 0.5rem 0;
+  padding-bottom: 1rem;
 }
 
-.arrowLeft,
-.arrowRight {
+.flashcardsSlider::-webkit-scrollbar {
+  height: 8px;
+}
+
+.flashcardsSlider::-webkit-scrollbar-thumb {
   background: #6a5af9;
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  width: 35px;
-  height: 35px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  position: absolute;
-  z-index: 10;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.arrowLeft { left: -15px; }
-.arrowRight { right: -15px; }
-
-.arrowLeft:hover,
-.arrowRight:hover {
-  background: #b8871f;
+  border-radius: 4px;
 }
 
 .flashcard {
