@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
-import JSZip from "jszip";
+import { useState } from "react";
 import styles from "../styles/Notes.module.css";
 
 export default function Notes() {
@@ -10,23 +9,7 @@ export default function Notes() {
   const [summaries, setSummaries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const sliderRef = useRef(null);
 
-  // 🔹 Handle file upload (simplified for now)
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    try {
-      const text = await file.text(); // fallback for testing
-      setInput((prev) => prev + "\n" + text);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to read file.");
-    }
-  };
-
-  // 🔹 Generate summaries + flashcards
   const handleGenerate = async () => {
     if (!input.trim()) {
       setError("Please add notes or upload a file first.");
@@ -49,7 +32,7 @@ export default function Notes() {
       if (data.error) setError(data.error);
       else {
         setSummaries(data.summaries || []);
-        setFlashcards(data.flashcards || []);
+        setFlashcards(data.flashcards.map((f) => ({ ...f, flipped: false })) || []);
       }
     } catch (err) {
       console.error(err);
@@ -59,21 +42,12 @@ export default function Notes() {
     }
   };
 
-  // 🔹 Flashcard flip toggle
   const toggleFlashcard = (index) => {
     setFlashcards((prev) =>
       prev.map((card, i) =>
         i === index ? { ...card, flipped: !card.flipped } : card
       )
     );
-  };
-
-  // 🔹 Slider controls
-  const slideLeft = () => {
-    if (sliderRef.current) sliderRef.current.scrollBy({ left: -220, behavior: "smooth" });
-  };
-  const slideRight = () => {
-    if (sliderRef.current) sliderRef.current.scrollBy({ left: 220, behavior: "smooth" });
   };
 
   return (
@@ -83,25 +57,18 @@ export default function Notes() {
       <textarea
         className={styles.textarea}
         rows={6}
-        placeholder="Paste your notes here or upload a file..."
+        placeholder="Paste your notes here..."
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
 
-      <div className={styles.fileGenerateRow}>
-        <label className={styles.fileButton}>
-          Browse Files
-          <input type="file" accept=".pdf,.pptx" onChange={handleFileChange} hidden />
-        </label>
-
-        <button
-          className={`${styles.generateButton} ${loading ? styles.loading : ""}`}
-          onClick={handleGenerate}
-          disabled={loading}
-        >
-          {loading ? "Generating…" : "Generate"}
-        </button>
-      </div>
+      <button
+        className={`${styles.generateButton} ${loading ? styles.loading : ""}`}
+        onClick={handleGenerate}
+        disabled={loading}
+      >
+        {loading ? "Generating…" : "Generate"}
+      </button>
 
       {error && <div className={styles.error}>{error}</div>}
 
@@ -117,25 +84,21 @@ export default function Notes() {
       {flashcards.length > 0 && (
         <div className={styles.flashcardsContainer}>
           <h2 className={styles.resultTitle}>Flashcards</h2>
-          <div className={styles.sliderWrapper}>
-            <button className={styles.arrowLeft} onClick={slideLeft}>&lt;</button>
-            <div className={styles.flashcardsSlider} ref={sliderRef}>
-              {flashcards.map((card, i) => (
-                <div
-                  key={i}
-                  className={`${styles.flashcard} ${card.flipped ? styles.flipped : ""}`}
-                  onClick={() => toggleFlashcard(i)}
-                >
-                  <div className={styles.front}>
-                    <p>{card.question}</p>
-                  </div>
-                  <div className={styles.back}>
-                    <p>{card.answer}</p>
-                  </div>
+          <div className={styles.flashcardsSlider}>
+            {flashcards.map((card, i) => (
+              <div
+                key={i}
+                className={`${styles.flashcard} ${card.flipped ? styles.flipped : ""}`}
+                onClick={() => toggleFlashcard(i)}
+              >
+                <div className={styles.front}>
+                  <p>{card.question}</p>
                 </div>
-              ))}
-            </div>
-            <button className={styles.arrowRight} onClick={slideRight}>&gt;</button>
+                <div className={styles.back}>
+                  <p>{card.answer}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
