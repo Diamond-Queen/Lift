@@ -3,14 +3,15 @@ import styles from "../styles/Notes.module.css";
 
 export default function Notes() {
   const [input, setInput] = useState("");
+  const [file, setFile] = useState(null);
   const [summaries, setSummaries] = useState([]);
   const [flashcards, setFlashcards] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleGenerate = async () => {
-    if (!input.trim()) {
-      setError("Please add notes.");
+    if (!input.trim() && !file) {
+      setError("Please add notes or upload a file.");
       return;
     }
 
@@ -20,19 +21,36 @@ export default function Notes() {
     setFlashcards([]);
 
     try {
-      const res = await fetch("/api/notes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: input }),
-      });
+      let res, data;
 
-      const data = await res.json();
+      if (file) {
+        // Use FormData for file uploads
+        const formData = new FormData();
+        if (input.trim()) formData.append("notes", input);
+        formData.append("file", file);
+
+        res = await fetch("/api/notes", {
+          method: "POST",
+          body: formData,
+        });
+        data = await res.json();
+      } else {
+        // JSON request for typed notes
+        res = await fetch("/api/notes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notes: input }),
+        });
+        data = await res.json();
+      }
+
       if (data.error) setError(data.error);
       else {
         setSummaries(data.summaries);
         setFlashcards(data.flashcards);
       }
-    } catch {
+    } catch (err) {
+      console.error(err);
       setError("Failed to generate. Try again.");
     } finally {
       setLoading(false);
@@ -57,6 +75,13 @@ export default function Notes() {
         onChange={(e) => setInput(e.target.value)}
       />
 
+      <input
+        type="file"
+        accept=".pdf,.pptx"
+        onChange={(e) => setFile(e.target.files[0])}
+        className={styles.fileInput}
+      />
+
       <button
         className={`${styles.btnAction} ${styles.btnBlue} ${loading ? styles.loading : ""}`}
         onClick={handleGenerate}
@@ -69,9 +94,9 @@ export default function Notes() {
 
       {summaries.length > 0 && (
         <div className={styles.resultCard}>
-          <h2 className={styles.resultTitle}>Summary</h2>
-          {summaries.map((s, i) => (
-            <p key={i}>{s}</p>
+          <h2 className={styles.resultTitle}>Summaries</h2>
+          {summaries.map((sum, i) => (
+            <p key={i} className={styles.summaryBlock}>{sum}</p>
           ))}
         </div>
       )}
