@@ -1,7 +1,6 @@
+"use client";
+
 import { useState } from "react";
-import JSZip from "jszip";
-import * as pdfjsLib from "pdfjs-dist";
-import "pdfjs-dist/build/pdf.worker.entry";
 import styles from "../styles/Notes.module.css";
 
 export default function Notes() {
@@ -10,78 +9,29 @@ export default function Notes() {
   const [summaries, setSummaries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [file, setFile] = useState(null);
 
-  // 🔹 Extract text from PPTX
-  const extractTextFromPptx = async (file) => {
-    const zip = await JSZip.loadAsync(file);
-    let text = "";
-
-    const slideFiles = Object.keys(zip.files).filter((f) =>
-      f.match(/^ppt\/slides\/slide\d+\.xml$/)
-    );
-
-    for (const slidePath of slideFiles) {
-      const slideXml = await zip.files[slidePath].async("text");
-      const matches = [...slideXml.matchAll(/<a:t>(.*?)<\/a:t>/g)];
-      matches.forEach((m) => (text += m[1] + "\n"));
-    }
-
-    return text;
-  };
-
-  // 🔹 Extract text from PDF
-  const extractTextFromPdf = async (file) => {
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    let text = "";
-
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      text += content.items.map((item) => item.str).join(" ") + "\n";
-    }
-
-    return text;
-  };
-
-  // 🔹 Handle file upload
-  const handleFileChange = async (e) => {
+  // 🔹 Handle file upload (store in state)
+  const handleFileChange = (e) => {
     setError("");
-    const file = e.target.files[0];
-    if (!file) return;
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
 
-    setLoading(true);
-    try {
-      let extractedText = "";
-
-      if (
-        file.type ===
+    if (
+      selectedFile.type !== "application/pdf" &&
+      selectedFile.type !==
         "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-      ) {
-        const arrayBuffer = await file.arrayBuffer();
-        extractedText = await extractTextFromPptx(arrayBuffer);
-      } else if (file.type === "application/pdf") {
-        extractedText = await extractTextFromPdf(file);
-      } else {
-        throw new Error("Unsupported file type.");
-      }
-
-      if (extractedText.trim()) {
-        setInput((prev) => prev + "\n" + extractedText);
-      } else {
-        throw new Error("No readable text found in file.");
-      }
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Failed to extract text.");
-    } finally {
-      setLoading(false);
+    ) {
+      setError("Unsupported file type. Please upload a PDF or PPTX.");
+      return;
     }
+
+    setFile(selectedFile);
   };
 
-  // 🔹 Generate summaries + flashcards
+  // 🔹 Generate summaries + flashcards (send to backend)
   const handleGenerate = async () => {
-    if (!input.trim()) {
+    if (!input.trim() && !file) {
       setError("Please add notes or upload a file first.");
       return;
     }
@@ -92,10 +42,13 @@ export default function Notes() {
     setFlashcards([]);
 
     try {
+      const formData = new FormData();
+      formData.append("notes", input);
+      if (file) formData.append("file", file);
+
       const res = await fetch("/api/notes", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: input }),
+        body: formData,
       });
 
       const data = await res.json();
