@@ -33,29 +33,74 @@ export default function Notes() {
     return text.trim();
   };
 
-  // ---------------------------------------------------
-  // PDF extraction (simple, browser-only fallback)
-  // ---------------------------------------------------
-// --- PDF extractor function (place this ABOVE handleFileChange) ---
-const extractTextFromPdf = async (file) => {
-  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf");
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+        
+        async function extractTextFromPdf(file) {
+        const buffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
 
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        // Convert buffer to text for uncompressed sections
+        const rawText = new TextDecoder("latin1").decode(bytes);
 
-  let text = "";
+        // Step 1: Extract all raw "stream" sections
+        const streamRegex = /stream([\s\S]*?)endstream/g;
+        const streams = [...rawText.matchAll(streamRegex)];
 
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    const pageText = content.items.map((item) => item.str).join(" ");
-    text += pageText + "\n\n"; // space between pages
+        let decodedText = "";
+
+        for (const s of streams) {
+          const streamData = s[1].trimStart();
+
+          // Step 2: Convert back to bytes for potential decompression
+          const streamBytes = new TextEncoder().encode(streamData);
+
+          try {
+            // Step 3: Try to inflate (decompress) the stream using built-in browser API
+            const decompressed = await decompressFlate(streamBytes);
+            decodedText += parsePdfTextOps(decompressed);
+          } catch {
+            // If not compressed, just parse as-is
+            decodedText += parsePdfTextOps(streamData);
+          }
+        }
+
+        // Step 4: Fallback — also parse uncompressed text objects directly
+        decodedText += parsePdfTextOps(rawText);
+
+        return decodedText.replace(/\s+/g, " ").trim();
+      }
+
+      // Utility: Decompress Flate (zlib/deflate) PDF streams
+      async function decompressFlate(uint8Array) {
+        const cs = new DecompressionStream("deflate");
+        const stream = new Response(new Blob([uint8Array]).stream().pipeThrough(cs));
+        return await stream.text();
+      }
+
+      // Utility: Parse BT/ET text operators and extract strings inside ( ... )
+      function parsePdfTextOps(text) {
+        let extracted = "";
+
+        // Find text between BT/ET blocks (PDF text objects)
+        const btEtRegex = /BT([\s\S]*?)ET/g;
+        const blocks = [...text.matchAll(btEtRegex)];
+
+        for (const block of blocks) {
+          // Match text shown with Tj or TJ operators
+
+          const textMatches = [...block[1].matchAll(/\(([^)]+)\)\s*T[Jj]/g)];
+          for (const m of textMatches) {
+            extracted += m[1] + " ";
+          }
+        }
+
+  // If nothing found, try plain parentheses
+  if (!extracted.trim()) {
+    const fallback = [...text.matchAll(/\(([^)]+)\)/g)];
+    extracted = fallback.map((m) => m[1]).join(" ");
   }
 
-  return text.trim();
-};
+  return extracted;
+}
 
 // --- Your file handler ---
 const handleFileChange = async (e) => {
@@ -77,6 +122,7 @@ const handleFileChange = async (e) => {
     else if (file.name.toLowerCase().endsWith(".pdf")) {
       extractedText = await extractTextFromPdf(file);
     }
+
 
     //  Unsupported file
     else {
