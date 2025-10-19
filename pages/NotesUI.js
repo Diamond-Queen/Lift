@@ -149,7 +149,7 @@ export default function NotesUI() {
         onChange={(e) => setInput(e.target.value)}
       />
 
-      {/* ✅ ADDED: File Input and Generate Button Row */}
+      {/*  ADDED: File Input and Generate Button Row */}
       <div className={styles.fileGenerateRow}>
         <label htmlFor="file-upload" className={styles.fileButton}>
           Upload File (.pdf, .pptx)
@@ -186,7 +186,7 @@ export default function NotesUI() {
       {flashcards.length > 0 && (
         <div className={styles.flashcardsContainer}>
           <h2 className={styles.resultTitle}>Flashcards</h2>
-          <div className={styles.flashcardsGrid}>
+          <div className={styles.flashcardsScroll}>
             {flashcards.map((card, i) => (
               <div
                 key={i}

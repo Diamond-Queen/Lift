@@ -134,22 +134,33 @@
   margin-top: 2rem;
 }
 
-/* FIX 1: Defined flashcardsGrid */
-.flashcardsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
+.flashcardsScroll {
+  /* Set up horizontal scrolling */
+  display: flex;
+  overflow-x: scroll; /* Enables horizontal scroll */
+  gap: 1.5rem; /* Gap between cards */
+  padding-bottom: 1rem; /* Space for the scrollbar */
+  padding: 1rem 0; /* Add padding for better look */
+  
+  
+  scrollbar-width: none; 
+}
+
+.flashcardsScroll::-webkit-scrollbar {
+  display: none; 
 }
 
 .flashcard {
   perspective: 1000px;
   cursor: pointer;
-  /* Reset flex: 0 0 200px from the original .flashcardsSlider */
+  flex: 0 0 250px; /* Fixed width for each flashcard */
+  height: 150px;
+  position: relative; /* For positioning front and back */
 }
 
 .flashcard > div {
   width: 100%;
-  min-height: 120px;
+  height: 100%;
   border-radius: 12px;
   padding: 1rem;
   display: flex;
