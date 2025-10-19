@@ -1,28 +1,57 @@
+/* Flashcards container */
 .flashcardsContainer {
   margin-top: 1.5rem;
+  position: relative;
 }
 
-.flashcardsSlider {
+/* Navigation arrows */
+.flashcardsNav {
   display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.flashcardsNav button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  margin-left: 0.25rem;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: transform 0.2s;
+}
+
+.flashcardsNav button:hover {
+  transform: scale(1.1);
+}
+
+/* Flashcards grid */
+.flashcardsGrid {
+  display: flex;
+  gap: 0.5rem;
   overflow-x: auto;
-  gap: 0.5rem; /* reduce spacing */
   scroll-snap-type: x mandatory;
   padding-bottom: 0.5rem;
 }
 
-.flashcardsSlider::-webkit-scrollbar {
+.flashcardsGrid::-webkit-scrollbar {
   height: 6px;
 }
 
-.flashcardsSlider::-webkit-scrollbar-thumb {
-  background-color: rgba(255,255,255,0.2);
+.flashcardsGrid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
 }
 
+/* Each flashcard */
 .flashcard {
-  flex: 0 0 200px; /* card width */
-  scroll-snap-align: start;
+  flex: 0 0 200px;
   perspective: 1000px;
+  scroll-snap-align: start;
   cursor: pointer;
 }
 
@@ -30,8 +59,8 @@
   width: 100%;
   min-height: 120px;
   border-radius: 10px;
-  padding: 0.8rem;
-  background: rgba(255,255,255,0.02);
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
   color: var(--muted);
   backface-visibility: hidden;
   transition: transform 0.6s;
@@ -41,6 +70,7 @@
   text-align: center;
 }
 
+/* Front/Back */
 .front {
   background: linear-gradient(120deg,#6a5af9,#b8871f);
   color: #fff;
