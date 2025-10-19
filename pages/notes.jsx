@@ -1,38 +1,63 @@
 "use client";
 
 import { useState } from "react";
+import JSZip from "jszip";
 import styles from "../styles/Notes.module.css";
 
 export default function Notes() {
   const [input, setInput] = useState("");
-  const [flashcards, setFlashcards] = useState([]);
   const [summaries, setSummaries] = useState([]);
+  const [flashcards, setFlashcards] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [file, setFile] = useState(null);
 
-  // 🔹 Handle file upload (store in state)
-  const handleFileChange = (e) => {
-    setError("");
-    const selectedFile = e.target.files[0];
-    if (!selectedFile) return;
+  // 🔹 Extract text from PPTX client-side
+  const extractTextFromPptx = async (file) => {
+    const arrayBuffer = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(arrayBuffer);
+    let text = "";
 
-    if (
-      selectedFile.type !== "application/pdf" &&
-      selectedFile.type !==
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-    ) {
-      setError("Unsupported file type. Please upload a PDF or PPTX.");
-      return;
+    const slideFiles = Object.keys(zip.files).filter((f) =>
+      f.match(/^ppt\/slides\/slide\d+\.xml$/)
+    );
+
+    for (const slidePath of slideFiles) {
+      const slideXml = await zip.files[slidePath].async("text");
+      const matches = [...slideXml.matchAll(/<a:t>(.*?)<\/a:t>/g)];
+      matches.forEach((m) => (text += m[1] + "\n"));
     }
 
-    setFile(selectedFile);
+    return text;
   };
 
-  // 🔹 Generate summaries + flashcards (send to backend)
+  // 🔹 Handle file upload
+  const handleFileChange = async (e) => {
+    setError("");
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+    try {
+      if (file.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation") {
+        const pptxText = await extractTextFromPptx(file);
+        setInput((prev) => prev + "\n" + pptxText);
+      } else if (file.type === "application/pdf") {
+        setError("PDF upload not supported. Please copy-paste the text.");
+      } else {
+        setError("Unsupported file type.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to extract text from file.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔹 Generate summaries + flashcards
   const handleGenerate = async () => {
-    if (!input.trim() && !file) {
-      setError("Please add notes or upload a file first.");
+    if (!input.trim()) {
+      setError("Please add notes or upload a PPTX file.");
       return;
     }
 
@@ -42,13 +67,10 @@ export default function Notes() {
     setFlashcards([]);
 
     try {
-      const formData = new FormData();
-      formData.append("notes", input);
-      if (file) formData.append("file", file);
-
       const res = await fetch("/api/notes", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: input }),
       });
 
       const data = await res.json();
@@ -81,14 +103,14 @@ export default function Notes() {
       <textarea
         className={styles.textarea}
         rows={6}
-        placeholder="Paste your notes here or upload a file..."
+        placeholder="Paste your notes here or upload a PPTX file..."
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
 
       <input
         type="file"
-        accept=".pptx, .pdf"
+        accept=".pptx"
         onChange={handleFileChange}
         className={styles.fileInput}
       />
