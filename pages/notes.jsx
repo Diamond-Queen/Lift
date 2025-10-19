@@ -1,34 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf"; // legacy build works for older Next.js
 import JSZip from "jszip";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
+import pdfWorker from "pdfjs-dist/legacy/build/pdf.worker.entry";
 import styles from "../styles/Notes.module.css";
 
-// PDF Worker via CDN
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 export default function Notes() {
   const [input, setInput] = useState("");
-  const [summaries, setSummaries] = useState([]);
   const [flashcards, setFlashcards] = useState([]);
+  const [summaries, setSummaries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Extract text from PDF
-  const extractTextFromPdf = async (file) => {
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    let text = "";
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      text += content.items.map((item) => item.str).join(" ") + "\n";
-    }
-    return text;
-  };
-
-  // Extract text from PPTX
+  // 🔹 Extract text from PPTX
   const extractTextFromPptx = async (file) => {
     const zip = await JSZip.loadAsync(file);
     let text = "";
@@ -43,7 +30,20 @@ export default function Notes() {
     return text;
   };
 
-  // Handle file upload
+  // 🔹 Extract text from PDF
+  const extractTextFromPdf = async (file) => {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let text = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map((item) => item.str).join(" ") + "\n";
+    }
+    return text;
+  };
+
+  // 🔹 Handle file upload
   const handleFileChange = async (e) => {
     setError("");
     const file = e.target.files[0];
@@ -53,21 +53,20 @@ export default function Notes() {
     try {
       let extractedText = "";
 
-      if (file.type === "application/pdf") {
-        extractedText = await extractTextFromPdf(file);
-      } else if (
+      if (
         file.type ===
         "application/vnd.openxmlformats-officedocument.presentationml.presentation"
       ) {
         const arrayBuffer = await file.arrayBuffer();
         extractedText = await extractTextFromPptx(arrayBuffer);
+      } else if (file.type === "application/pdf") {
+        extractedText = await extractTextFromPdf(file);
       } else {
         throw new Error("Unsupported file type.");
       }
 
-      if (!extractedText.trim()) throw new Error("No readable text found.");
-
-      setInput((prev) => (prev ? prev + "\n" : "") + extractedText);
+      if (extractedText.trim()) setInput((prev) => prev + "\n" + extractedText);
+      else throw new Error("No readable text found in file.");
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to extract text.");
@@ -76,7 +75,7 @@ export default function Notes() {
     }
   };
 
-  // Generate summaries & flashcards
+  // 🔹 Generate summaries + flashcards
   const handleGenerate = async () => {
     if (!input.trim()) {
       setError("Please add notes or upload a file first.");
@@ -99,8 +98,9 @@ export default function Notes() {
       if (data.error) setError(data.error);
       else {
         setSummaries(data.summaries || []);
+        // Ensure flashcards have flipped state
         setFlashcards(
-          (data.flashcards || []).map((f) => ({ ...f, flipped: false }))
+          (data.flashcards || []).map((c) => ({ ...c, flipped: false }))
         );
       }
     } catch (err) {
@@ -111,7 +111,7 @@ export default function Notes() {
     }
   };
 
-  // Flip flashcard
+  // 🔹 Flashcard flip toggle
   const toggleFlashcard = (index) => {
     setFlashcards((prev) =>
       prev.map((card, i) =>
@@ -127,14 +127,14 @@ export default function Notes() {
       <textarea
         className={styles.textarea}
         rows={6}
-        placeholder="Paste notes here or upload a file..."
+        placeholder="Paste your notes here or upload a file..."
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
 
       <input
         type="file"
-        accept=".pdf,.pptx"
+        accept=".pptx,.pdf"
         onChange={handleFileChange}
         className={styles.fileInput}
       />
