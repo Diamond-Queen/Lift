@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import JSZip from "jszip";
-// ASSUMING THE PATH IS CORRECT NOW:
+// THE PATH IS CORRECT NOW:
 import styles from "../styles/Notes.module.css"; 
 // Note: NO TOP LEVEL pdfjs-dist import here!
 
