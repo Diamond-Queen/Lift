@@ -7,49 +7,46 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  const { notes } = req.body;
+
+  if (!notes || !notes.trim()) {
+    return res.status(400).json({ error: "Notes required" });
+  }
+
   try {
-    const { notes } = req.body;
-
-    if (!notes || typeof notes !== "string" || !notes.trim()) {
-      return res.status(400).json({ error: "Notes required" });
-    }
-
-    const truncated = notes.slice(0, 5000);
-
-    //  Summary
+    // Generate summary
     const summaryResp = await client.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [
-        { role: "user", content: `Summarize this clearly and concisely:\n\n${truncated}` },
-      ],
+      messages: [{ role: "user", content: `Summarize clearly:\n\n${notes}` }],
     });
 
     const summary = summaryResp.choices[0].message.content;
 
-    // Flashcards
-    const flashResp = await client.chat.completions.create({
+    // Generate flashcards
+    const flashcardResp = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "user",
-          content: `Create 5 educational flashcards in JSON format [{"question":"...","answer":"..."}] from this text:\n\n${truncated}`,
+          content: `Create 3-5 flashcards in JSON format from this text. Only respond with valid JSON array like [{"question":"...","answer":"..."}]:\n\n${notes}`,
         },
       ],
     });
 
     let flashcards = [];
     try {
-      flashcards = JSON.parse(flashResp.choices[0].message.content);
+      flashcards = JSON.parse(flashcardResp.choices[0].message.content);
+      if (!Array.isArray(flashcards)) flashcards = [];
     } catch {
       flashcards = [];
     }
 
-    res.status(200).json({
-      summaries: [summary],
-      flashcards: flashcards.map((f) => ({ ...f, flipped: false })),
-    });
+    // Add flipped flag for frontend
+    flashcards = flashcards.map((c) => ({ ...c, flipped: false }));
+
+    res.status(200).json({ summary, flashcards });
   } catch (err) {
-    console.error("API Error:", err);
-    res.status(500).json({ error: "Failed to generate" });
+    console.error(err);
+    res.status(500).json({ error: "Failed to generate. Try again." });
   }
 }
