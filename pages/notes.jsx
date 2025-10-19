@@ -4,161 +4,118 @@ import { useState } from "react";
 import JSZip from "jszip";
 import styles from "../styles/Notes.module.css";
 
-export default function Notes() {
-  const [input, setInput] = useState("");
-  const [flashcards, setFlashcards] = useState([]);
-  const [summaries, setSummaries] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+// ========== PDF Extraction (Manual, No Libraries) ==========
+async function extractTextFromPdf(file) {
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  const rawText = new TextDecoder("latin1").decode(bytes);
 
-  // -------------------------
-  // PPTX extraction (JSZip)
-  // -------------------------
-  const extractTextFromPptx = async (arrayBuffer) => {
-    const zip = await JSZip.loadAsync(arrayBuffer);
-    let text = "";
+  const streamRegex = /stream([\s\S]*?)endstream/g;
+  const streams = [...rawText.matchAll(streamRegex)];
+  let extracted = "";
 
-    const slideFiles = Object.keys(zip.files).filter((f) =>
-      /^ppt\/slides\/slide\d+\.xml$/.test(f)
-    );
-
-    for (const slidePath of slideFiles) {
-      const slideXml = await zip.files[slidePath].async("text");
-      // grab text nodes <a:t>...</a:t>
-      const matches = [...slideXml.matchAll(/<a:t>(.*?)<\/a:t>/g)];
-      matches.forEach((m) => {
-        text += m[1] + "\n";
-      });
+  for (const s of streams) {
+    const content = s[1].trimStart();
+    try {
+      const inflated = await decompressFlate(content);
+      extracted += parsePdfTextOps(inflated);
+    } catch {
+      extracted += parsePdfTextOps(content);
     }
-    return text.trim();
-  };
+  }
 
-        
-        async function extractTextFromPdf(file) {
-        const buffer = await file.arrayBuffer();
-        const bytes = new Uint8Array(buffer);
+  // Add any text found directly outside streams
+  extracted += parsePdfTextOps(rawText);
+  return extracted.replace(/\s+/g, " ").trim();
+}
 
-        // Convert buffer to text for uncompressed sections
-        const rawText = new TextDecoder("latin1").decode(bytes);
+async function decompressFlate(data) {
+  const uint8Array = new TextEncoder().encode(data);
+  const ds = new DecompressionStream("deflate");
+  const stream = new Response(new Blob([uint8Array]).stream().pipeThrough(ds));
+  return await stream.text();
+}
 
-        // Step 1: Extract all raw "stream" sections
-        const streamRegex = /stream([\s\S]*?)endstream/g;
-        const streams = [...rawText.matchAll(streamRegex)];
-
-        let decodedText = "";
-
-        for (const s of streams) {
-          const streamData = s[1].trimStart();
-
-          // Step 2: Convert back to bytes for potential decompression
-          const streamBytes = new TextEncoder().encode(streamData);
-
-          try {
-            // Step 3: Try to inflate (decompress) the stream using built-in browser API
-            const decompressed = await decompressFlate(streamBytes);
-            decodedText += parsePdfTextOps(decompressed);
-          } catch {
-            // If not compressed, just parse as-is
-            decodedText += parsePdfTextOps(streamData);
-          }
-        }
-
-        // Step 4: Fallback — also parse uncompressed text objects directly
-        decodedText += parsePdfTextOps(rawText);
-
-        return decodedText.replace(/\s+/g, " ").trim();
-      }
-
-      // Utility: Decompress Flate (zlib/deflate) PDF streams
-      async function decompressFlate(uint8Array) {
-        const cs = new DecompressionStream("deflate");
-        const stream = new Response(new Blob([uint8Array]).stream().pipeThrough(cs));
-        return await stream.text();
-      }
-
-      // Utility: Parse BT/ET text operators and extract strings inside ( ... )
-      function parsePdfTextOps(text) {
-        let extracted = "";
-
-        // Find text between BT/ET blocks (PDF text objects)
-        const btEtRegex = /BT([\s\S]*?)ET/g;
-        const blocks = [...text.matchAll(btEtRegex)];
-
-        for (const block of blocks) {
-          // Match text shown with Tj or TJ operators
-
-          const textMatches = [...block[1].matchAll(/\(([^)]+)\)\s*T[Jj]/g)];
-          for (const m of textMatches) {
-            extracted += m[1] + " ";
-          }
-        }
-
-  // If nothing found, try plain parentheses
+function parsePdfTextOps(text) {
+  let extracted = "";
+  const btEt = /BT([\s\S]*?)ET/g;
+  const blocks = [...text.matchAll(btEt)];
+  for (const b of blocks) {
+    const matches = [...b[1].matchAll(/\(([^)]+)\)\s*T[Jj]/g)];
+    for (const m of matches) extracted += m[1] + " ";
+  }
   if (!extracted.trim()) {
     const fallback = [...text.matchAll(/\(([^)]+)\)/g)];
     extracted = fallback.map((m) => m[1]).join(" ");
   }
-
   return extracted;
 }
 
-// --- Your file handler ---
-const handleFileChange = async (e) => {
-  setError("");
-  const file = e.target.files?.[0];
-  if (!file) return;
+// ========== PPTX Extraction ==========
+async function extractTextFromPptx(file) {
+  const zip = await JSZip.loadAsync(file);
+  let text = "";
 
-  setLoading(true);
-  try {
-    let extractedText = "";
+  const slides = Object.keys(zip.files).filter((f) =>
+    f.match(/^ppt\/slides\/slide\d+\.xml$/)
+  );
 
-    // PPTX support
-    if (file.name.toLowerCase().endsWith(".pptx")) {
-      const buffer = await file.arrayBuffer();
-      extractedText = await extractTextFromPptx(buffer);
-    }
-
-    //  PDF support
-    else if (file.name.toLowerCase().endsWith(".pdf")) {
-      extractedText = await extractTextFromPdf(file);
-    }
-
-
-    //  Unsupported file
-    else {
-      throw new Error("Unsupported file type. Use PDF or PPTX.");
-    }
-
-    if (!extractedText || !extractedText.trim()) {
-      throw new Error("No readable text found in file.");
-    }
-
-    // Append extracted text to textarea (not file path)
-    setInput((prev) =>
-      prev ? prev.trim() + "\n\n" + extractedText.trim() : extractedText.trim()
-    );
-
-    //  Allow re-upload of same file
-    e.target.value = "";
-  } catch (err) {
-    console.error(err);
-    setError(err.message || "Failed to extract text from file.");
-  } finally {
-    setLoading(false);
+  for (const path of slides) {
+    const xml = await zip.files[path].async("text");
+    const matches = [...xml.matchAll(/<a:t>(.*?)<\/a:t>/g)];
+    matches.forEach((m) => (text += m[1] + "\n"));
   }
-};
 
+  return text.trim();
+}
 
-  // -------------------------
-  // Generate summary + flashcards
-  // -------------------------
-  const handleGenerate = async () => {
+// ========== Main Component ==========
+export default function Notes() {
+  const [input, setInput] = useState("");
+  const [summaries, setSummaries] = useState([]);
+  const [flashcards, setFlashcards] = useState([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // File upload handler
+  const handleFileChange = async (e) => {
     setError("");
-    if (!input.trim()) {
-      setError("Please paste notes or upload a file first.");
-      return;
-    }
+    const file = e.target.files?.[0];
+    if (!file) return;
 
+    setLoading(true);
+    try {
+      let extractedText = "";
+
+      if (file.name.toLowerCase().endsWith(".pptx")) {
+        const arrayBuffer = await file.arrayBuffer();
+        extractedText = await extractTextFromPptx(arrayBuffer);
+      } else if (file.name.toLowerCase().endsWith(".pdf")) {
+        extractedText = await extractTextFromPdf(file);
+      } else {
+        throw new Error("Unsupported file type. Use PDF or PPTX.");
+      }
+
+      if (!extractedText.trim()) throw new Error("No readable text found.");
+
+      setInput((prev) =>
+        prev ? prev + "\n\n" + extractedText.trim() : extractedText.trim()
+      );
+
+      e.target.value = "";
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to extract text.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Generate summaries + flashcards
+  const handleGenerate = async () => {
+    if (!input.trim()) return setError("Please paste or upload notes first.");
+
+    setError("");
     setLoading(true);
     setSummaries([]);
     setFlashcards([]);
@@ -171,13 +128,12 @@ const handleFileChange = async (e) => {
       });
 
       const data = await res.json();
-      if (data.error) {
-        setError(data.error);
-      } else {
-        setSummaries(data.summaries || []);
-        // ensure each card has flipped prop
-        setFlashcards((data.flashcards || []).slice(0, 12).map((f) => ({ ...f, flipped: false })));
-      }
+      if (data.error) throw new Error(data.error);
+
+      // Limit flashcards to 12
+      const flashcardsLimited = (data.flashcards || []).slice(0, 12);
+      setSummaries(data.summaries || []);
+      setFlashcards(flashcardsLimited);
     } catch (err) {
       console.error(err);
       setError("Failed to generate. Try again.");
@@ -186,35 +142,36 @@ const handleFileChange = async (e) => {
     }
   };
 
-  // -------------------------
-  // Flashcard flip (in-place)
-  // -------------------------
   const toggleFlashcard = (index) => {
-    setFlashcards((prev) => prev.map((c, i) => (i === index ? { ...c, flipped: !c.flipped } : c)));
+    setFlashcards((prev) =>
+      prev.map((c, i) => (i === index ? { ...c, flipped: !c.flipped } : c))
+    );
   };
 
-  // -------------------------
-  // Render
-  // -------------------------
   return (
     <div className={styles.container}>
       <h1 className={styles.pageTitle}>Lift Notes</h1>
 
       <textarea
         className={styles.textarea}
-        rows={6}
-        placeholder="Paste your notes here or upload a PDF/PPTX..."
+        rows={8}
+        placeholder="Paste notes here or upload a file..."
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
-        <label className={styles.fileButton}>
-          Browse Files
-          <input type="file" accept=".pdf,.pptx" onChange={handleFileChange} hidden />
-        </label>
-
-        <button className={`${styles.generateButton} ${loading ? styles.loading : ""}`} onClick={handleGenerate} disabled={loading}>
+      <div className={styles.controls}>
+        <input
+          type="file"
+          accept=".pdf,.pptx"
+          onChange={handleFileChange}
+          className={styles.fileInput}
+        />
+        <button
+          className={`${styles.btnAction} ${loading ? styles.loading : ""}`}
+          onClick={handleGenerate}
+          disabled={loading}
+        >
           {loading ? "Generating…" : "Generate"}
         </button>
       </div>
@@ -223,28 +180,30 @@ const handleFileChange = async (e) => {
 
       {summaries.length > 0 && (
         <div className={styles.resultCard}>
-          <h2 className={styles.resultTitle}>Summaries</h2>
-          {summaries.map((s, idx) => (
-            <p key={idx}>{s}</p>
+          <h2>Summaries</h2>
+          {summaries.map((s, i) => (
+            <p key={i}>{s}</p>
           ))}
         </div>
       )}
 
       {flashcards.length > 0 && (
         <div className={styles.flashcardsContainer}>
-          <h2 className={styles.resultTitle}>Flashcards</h2>
-          <div className={styles.flashcardsSlider}>
-            {flashcards.map((card, i) => (
+          <h2>Flashcards</h2>
+          <div className={styles.flashcardsGrid}>
+            {flashcards.map((c, i) => (
               <div
                 key={i}
-                className={`${styles.flashcard} ${card.flipped ? styles.flipped : ""}`}
+                className={`${styles.flashcard} ${
+                  c.flipped ? styles.flipped : ""
+                }`}
                 onClick={() => toggleFlashcard(i)}
               >
                 <div className={styles.front}>
-                  <p>{card.question}</p>
+                  <p>{c.question}</p>
                 </div>
                 <div className={styles.back}>
-                  <p>{card.answer}</p>
+                  <p>{c.answer}</p>
                 </div>
               </div>
             ))}
