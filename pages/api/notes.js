@@ -1,7 +1,5 @@
+// pages/api/notes.js
 import OpenAI from "openai";
-import pdfParse from "pdf-parse";
-import fs from "fs/promises";
-import { extractPptx } from "pptx-content-extractor";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -9,13 +7,13 @@ export default async function handler(req, res) {
   if (req.method !== "POST")
     return res.status(405).json({ error: "Method not allowed" });
 
-  const { notes } = req.body; // JSON input
+  const { notes } = req.body; // now req.body is parsed JSON
   if (!notes || !notes.trim()) return res.status(400).json({ error: "Notes required" });
 
   try {
-    const truncatedBlock = notes.slice(0, 2000); // prevent token issues
+    const truncatedBlock = notes.slice(0, 2000);
 
-    // === Generate summary ===
+    // === Summary ===
     const summaryResp = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -24,13 +22,13 @@ export default async function handler(req, res) {
     });
     const summary = summaryResp.choices[0].message.content;
 
-    // === Generate flashcards ===
+    // === Flashcards ===
     const flashcardsResp = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "user",
-          content: `Create 3-5 flashcards in JSON format [{"question":"...","answer":"..."}] from this text:\n\n${truncatedBlock}`,
+          content: `Create 3-5 flashcards in JSON [{"question":"...","answer":"..."}] from this text:\n\n${truncatedBlock}`,
         },
       ],
     });
@@ -43,7 +41,6 @@ export default async function handler(req, res) {
       flashcards = [];
     }
 
-    // Add flipped state for frontend
     flashcards = flashcards.map((f) => ({ ...f, flipped: false }));
 
     res.status(200).json({ summaries: [summary], flashcards });
