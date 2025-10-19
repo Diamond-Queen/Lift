@@ -1,3 +1,9 @@
+:root {
+  --muted: #3a3b3c;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-heading: 'Georgia', serif; /* Placeholder if no custom font is linked */
+}
+
 .container {
   padding: 1.5rem;
   max-width: 42rem;
@@ -32,15 +38,30 @@
   outline: none;
 }
 
-/* File + Generate row */
+/* FIX 2: File + Generate row structure */
 .fileGenerateRow {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem; /* Increased margin for better spacing */
 }
 
-/* File button */
+/* FIX 2: Hidden file input */
+.hiddenFileInput {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+/* File button (now styled as a label) */
 .fileButton {
+  /* Use flex-grow for better scaling */
+  flex: 1; 
+  display: flex; /* For centering the text */
+  justify-content: center;
+  align-items: center;
   background: #fff;
   border: 2px solid #6a5af9;
   color: #6a5af9;
@@ -49,6 +70,7 @@
   cursor: pointer;
   font-weight: 600;
   transition: all 0.2s;
+  text-align: center; /* Ensures text is centered */
 }
 
 .fileButton:hover {
@@ -67,6 +89,7 @@
   cursor: pointer;
   font-weight: 700;
   transition: transform 0.2s, box-shadow 0.2s;
+  /* Ensure it has a minimum width if needed, but flex handles it here */
 }
 
 .generateButton:hover {
@@ -82,7 +105,11 @@
 /* Error */
 .error {
   color: crimson;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1.5rem; /* Increased margin for better spacing */
+  padding: 0.75rem;
+  background: #ffebeb;
+  border: 1px solid crimson;
+  border-radius: 8px;
 }
 
 /* Result Card */
@@ -95,10 +122,16 @@
   box-shadow: 0 8px 24px rgba(0,0,0,0.15);
 }
 
+.resultCard p {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+
 .resultTitle {
   font-weight: 700;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem; /* Adjusted margin */
   color: #6a5af9;
+  font-size: 1.5rem;
 }
 
 /* Flashcards */
@@ -106,26 +139,17 @@
   margin-top: 2rem;
 }
 
-.flashcardsSlider {
-  display: flex;
-  overflow-x: auto;
+/* FIX 1: Defined flashcardsGrid */
+.flashcardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1rem;
-  padding-bottom: 1rem;
-}
-
-.flashcardsSlider::-webkit-scrollbar {
-  height: 8px;
-}
-
-.flashcardsSlider::-webkit-scrollbar-thumb {
-  background: #6a5af9;
-  border-radius: 4px;
 }
 
 .flashcard {
-  flex: 0 0 200px;
   perspective: 1000px;
   cursor: pointer;
+  /* Reset flex: 0 0 200px from the original .flashcardsSlider */
 }
 
 .flashcard > div {
@@ -137,10 +161,18 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+  /* Position absolute for flip effect */
+  position: absolute; 
   backface-visibility: hidden;
   transition: transform 0.6s;
   font-weight: 600;
   font-size: 0.95rem;
+}
+
+/* Ensure the flashcard container takes up space */
+.flashcard {
+  min-height: 120px;
+  position: relative;
 }
 
 .front {
@@ -152,6 +184,10 @@
 .back {
   background: #fff;
   color: #111;
+  /* Position the back face */
+  position: absolute; 
+  top: 0;
+  left: 0;
   transform: rotateY(180deg);
 }
 
