@@ -1,12 +1,19 @@
+/* Home.module.css
+    This file focuses solely on the layout and unique structural components 
+    of the home page. All color tokens, typography, and button base styles 
+    are managed globally in globals.css to ensure theme consistency.
+*/
+
 .root {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  color: white;
+  /* color is handled by global var(--text-color) */
 }
 
+/* Glassy Card Styles */
 .hero {
   text-align: center;
   max-width: 880px;
@@ -14,9 +21,10 @@
   padding: 2.5rem;
   border-radius: 14px;
   backdrop-filter: blur(6px) saturate(120%);
-  box-shadow: 0 10px 30px rgba(2,6,23,0.35);
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: var(--glass-shadow); /* Uses global shadow */
+  background: var(--card-bg); /* Uses global background gradient */
+  border: 1px solid var(--card-border); /* Uses global border */
+  transition: all 300ms var(--easing); /* Uses global transition */
 }
 
 .heroContainer {
@@ -26,13 +34,15 @@
   align-items: center;
 }
 
+/* Inner card styling (mutes to transparent) */
 .heroCard {
   padding: 1.75rem;
   border-radius: 12px;
   background: transparent;
-  box-shadow: 0 8px 30px rgba(2,6,23,0.5);
+  box-shadow: 0 8px 30px rgba(2,6,23,0.5); /* Specific shadow for contrast */
 }
 
+/* Title and Flourish */
 .titleWrap { display: inline-block; position: relative; }
 .titleFlourish {
   height: 8px;
@@ -51,7 +61,7 @@
   font-size: 3rem;
   font-weight: 800;
   margin-bottom: 0.25rem;
-  color: var(--muted);
+  color: var(--text-color); /* Use global text color */
   text-shadow: 0 0 10px rgba(0,0,0,0.4);
 }
 
@@ -59,11 +69,12 @@
   font-size: 1.1rem;
   margin-top: 0;
   margin-bottom: 2rem;
-  color: var(--muted);
+  color: var(--muted); /* Use global muted color */
   opacity: 0.7;
   font-weight: 400;
 }
 
+/* Toggles/Settings Area */
 .toggles {
   background: rgba(255,255,255,0.04);
   backdrop-filter: blur(12px) saturate(130%);
@@ -71,6 +82,8 @@
   border: 1px solid rgba(255,255,255,0.1);
   box-shadow: var(--glass-shadow);
   text-align: left;
+  border-radius: 12px;
+  transition: all 300ms var(--easing);
 }
 
 .pageTitle {
@@ -88,14 +101,13 @@
   border-radius: 8px;
   margin-bottom: 0.5rem;
   transition: background 150ms var(--easing);
-  display: flex; /* Ensure flex for alignment */
-  align-items: center; /* Vertically center items */
-  justify-content: space-between; /* Push label and switch apart */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 .toggleRow:hover {
   background: rgba(255,255,255,0.05);
 }
-/* Improved focus state for the entire row (when activated by keyboard) */
 .toggleRow:focus {
   outline: none;
   box-shadow: 0 0 0 2px var(--accent-weak);
@@ -106,31 +118,15 @@
   color: var(--muted);
 }
 
-/* Button layout */
+/* Button LAYOUT only */
 .actions {
   display: flex;
   gap: 1.5rem;
   justify-content: center;
   margin-top: 3rem;
-  --btn-padding-vert: 0.85rem;
-  --btn-padding-horiz: 2rem;
 }
 
-/* Button colors - used to override the .btn global style */
-.primary {
-  /* This class is now empty and relies on the global .btn-primary */
-}
-
-.accent {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-.accent:hover {
-  background: rgba(255,255,255,0.08);
-}
-
-/* --- Custom Toggle Switch Styles --- */
+/* --- Custom Toggle Switch Styles (Not Bootstrap) --- */
 
 /* The switch - the box around the slider */
 .switch {
@@ -183,7 +179,7 @@ input:checked + .slider:before {
   transform: translateX(26px);
 }
 
-/* Media Queries */
+/* Media Queries (Layout adjustments) */
 @media (max-width: 900px) {
   .heroContainer {
     grid-template-columns: 1fr;
@@ -196,5 +192,6 @@ input:checked + .slider:before {
 @media (max-width: 640px) {
   .title { font-size: 2.25rem; }
   .actions { flex-direction: column; gap: 0.75rem; }
-  .btn { width: 100%; padding-left: 1rem; padding-right: 1rem; }
+  /* Apply full width to buttons via the global .btn class */
+  .actions :global(.btn) { width: 100%; }
 }

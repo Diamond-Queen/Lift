@@ -34,6 +34,7 @@
     --font-heading: Poppins, var(--inter);
     --font-script: 'Great Vibes', cursive;
     --easing: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* ease-in-out */
+    --muted: rgba(255,255,255,0.95); /* Define muted for dark theme in root */
 }
 
 /* Base values (Dark Mode Default) */
@@ -54,6 +55,7 @@ html[data-theme="light"] {
     --card-bg: var(--card-bg-light);
     --card-border: var(--card-border-light);
     --glass-shadow: var(--glass-shadow-light);
+    --muted: #1a1a1a; /* Define muted for light theme */
 }
 
 
@@ -127,7 +129,7 @@ html[data-studymode="true"] .btn {
 html[data-theme="dark"] .btn-primary {
     background: linear-gradient(90deg, var(--accent) 0%, #b98f2f 100%);
     border: none;
-    color: var(--accent-contrast);
+    color: var(--accent-contrast); /* Black text on gold background (high contrast) */
     box-shadow: 0 10px 30px rgba(184,143,47,0.08);
 }
 html[data-theme="dark"] .btn-primary:hover, html[data-theme="dark"] .btn-primary:focus {
@@ -139,7 +141,7 @@ html[data-theme="dark"] .btn-primary:hover, html[data-theme="dark"] .btn-primary
 html[data-theme="light"] .btn-primary {
     background: #1a1a1a;
     border: 1px solid #1a1a1a;
-    color: var(--accent);
+    color: var(--accent); /* Gold text on dark background */
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 html[data-theme="light"] .btn-primary:hover, html[data-theme="light"] .btn-primary:focus {
@@ -157,7 +159,7 @@ html[data-theme="light"] .btn-primary:hover, html[data-theme="light"] .btn-prima
 html[data-theme="dark"] .btn.accent {
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.1);
-    color: var(--text-color-dark);
+    color: var(--text-color-dark); /* LIGHT text on dark/glassy background (FIXED) */
     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
 html[data-theme="dark"] .btn.accent:hover {
@@ -169,7 +171,7 @@ html[data-theme="dark"] .btn.accent:hover {
 html[data-theme="light"] .btn.accent {
     background: #FFFFFF;
     border: 1px solid var(--accent);
-    color: var(--text-color-light);
+    color: var(--text-color-light); /* DARK text on light background (FIXED) */
     box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 html[data-theme="light"] .btn.accent:hover {
