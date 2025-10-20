@@ -32,7 +32,10 @@ export default function Home() {
   }, []);
 
   const handleThemeKeyDown = useCallback((e) => {
-    if (e.key === "Enter") toggleTheme();
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleTheme();
+    }
   }, [toggleTheme]);
 
   const toggleStudyMode = useCallback(() => {
@@ -40,7 +43,10 @@ export default function Home() {
   }, []);
 
   const handleStudyKeyDown = useCallback((e) => {
-    if (e.key === "Enter") toggleStudyMode();
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleStudyMode();
+    }
   }, [toggleStudyMode]);
 
   return (
@@ -55,6 +61,7 @@ export default function Home() {
             <p className={styles.subtitle}>Study smarter. Prepare faster.</p>
 
             <nav className={styles.actions} aria-label="Primary">
+                {/* Note: Added styles.primary to enable the gold gradient */}
                 <Link href="/notes" className={`${styles.btn} ${styles.primary}`}>
                   Lift Notes
                 </Link>
@@ -67,56 +74,49 @@ export default function Home() {
           <aside className={`${styles.heroCard} ${styles.toggles}`} aria-label="Preferences">
             <h3 className={styles.pageTitle || ''}>Preferences</h3>
 
-            {/* DARK THEME TOGGLE - ORIGINAL BOOTSTRAP SWITCH */}
+            {/* DARK THEME TOGGLE - CUSTOM SWITCH MARKUP */}
             <div 
-              className={`${styles.toggleRow} d-flex align-items-center justify-content-between`}
+              className={`${styles.toggleRow}`}
               tabIndex={0}
-              role="button"
+              role="switch"
               onClick={toggleTheme}
               onKeyDown={handleThemeKeyDown}
-              aria-label={`Toggle dark theme, currently ${theme === 'dark' ? 'on' : 'off'}`}
+              aria-checked={theme === 'dark'}
             > 
               <div className={styles.toggleLabel}>Dark theme</div>
-              <div>
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    id="themeSwitch"
-                    checked={theme === 'dark'}
-                    onChange={toggleTheme}
-                    aria-checked={theme === 'dark'}
-                  />
-                  <label className="form-check-label sr-only" htmlFor="themeSwitch">Dark theme</label>
-                </div>
-              </div>
+              
+              <label className={styles.switch} htmlFor="themeSwitch">
+                <input
+                  type="checkbox"
+                  id="themeSwitch"
+                  checked={theme === 'dark'}
+                  onChange={toggleTheme}
+                  aria-label="Toggle dark theme"
+                />
+                <span className={styles.slider} aria-hidden="true" />
+              </label>
             </div>
 
-            {/* STUDY MODE TOGGLE - ORIGINAL BOOTSTRAP SWITCH */}
+            {/* STUDY MODE TOGGLE - CUSTOM SWITCH MARKUP */}
             <div 
-              className={`${styles.toggleRow} d-flex align-items-center justify-content-between`}
+              className={`${styles.toggleRow}`}
               tabIndex={0}
-              role="button"
+              role="switch"
               onClick={toggleStudyMode}
               onKeyDown={handleStudyKeyDown}
-              aria-label={`Toggle study mode, currently ${studyMode ? 'on' : 'off'}`}
+              aria-checked={studyMode}
             > 
               <div className={styles.toggleLabel}>Study mode</div>
-              <div>
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    id="studySwitch"
-                    checked={studyMode}
-                    onChange={toggleStudyMode}
-                    aria-checked={studyMode}
-                  />
-                  <label className="form-check-label sr-only" htmlFor="studySwitch">Study mode</label>
-                </div>
-              </div>
+              <label className={styles.switch} htmlFor="studySwitch">
+                <input
+                  type="checkbox"
+                  id="studySwitch"
+                  checked={studyMode}
+                  onChange={toggleStudyMode}
+                  aria-label="Toggle study mode"
+                />
+                <span className={styles.slider} aria-hidden="true" />
+              </label>
             </div>
           </aside>
         </div>
