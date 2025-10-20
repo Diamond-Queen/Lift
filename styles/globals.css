@@ -8,27 +8,54 @@
 @tailwind utilities;
 
 :root {
-    --bg-top: #0b0b0b; /* near-black */
-    --bg-bottom: #0f0f10; /* slightly lighter */
+    /* --- Dark Mode Variables (Default) --- */
+    --bg-top-dark: #0b0b0b; /* near-black */
+    --bg-bottom-dark: #0f0f10; /* slightly lighter */
+    --text-color-dark: rgba(255,255,255,0.95); /* near-white text */
+    --card-bg-dark: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    --card-border-dark: rgba(255,255,255,0.04);
+    --glass-shadow-dark: 0 10px 40px rgba(2,6,23,0.6);
+
+    /* --- Light Mode Variables --- */
+    --bg-top-light: #FFFFFF;
+    --bg-bottom-light: #F0F2F5;
+    --text-color-light: #1a1a1a;
+    --card-bg-light: #ffffff;
+    --card-border-light: rgba(0,0,0,0.08);
+    --glass-shadow-light: 0 10px 40px rgba(0,0,0,0.08);
+    
+    /* --- Shared Variables --- */
     --accent: #D4AF37; /* gold-ish */
-    --accent-contrast: #0b0b0b;
-    --muted: rgba(255,255,255,0.95);
-    --glass-shadow: 0 10px 40px rgba(2,6,23,0.6);
+    --accent-contrast: #0b0b0b; /* black for text on gold */
     --inter: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    /* alpha-ready accent fallbacks for better cross-browser compatibility */
     --accent-rgb: 212,175,55;
     --accent-weak: rgba(212,175,55,0.12);
     --accent-weak-2: rgba(212,175,55,0.08);
-    --accent-border: rgba(255,255,255,0.08);
     --font-heading: Poppins, var(--inter);
     --font-script: 'Great Vibes', cursive;
     --easing: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* ease-in-out */
 }
 
-/* Base styles for dark mode */
-html[data-theme="dark"] {
-    /* defaults are already dark */
+/* Base values (Dark Mode Default) */
+:root {
+    --bg-top: var(--bg-top-dark);
+    --bg-bottom: var(--bg-bottom-dark);
+    --text-color: var(--text-color-dark);
+    --card-bg: var(--card-bg-dark);
+    --card-border: var(--card-border-dark);
+    --glass-shadow: var(--glass-shadow-dark);
 }
+
+/* Light Mode Overrides */
+html[data-theme="light"] {
+    --bg-top: var(--bg-top-light);
+    --bg-bottom: var(--bg-bottom-light);
+    --text-color: var(--text-color-light);
+    --card-bg: var(--card-bg-light);
+    --card-border: var(--card-border-light);
+    --glass-shadow: var(--glass-shadow-light);
+}
+
 
 /* General resets and tokens */
 body, html {
@@ -36,6 +63,7 @@ body, html {
     background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
     min-height: 100vh;
     transition: background 300ms var(--easing);
+    color: var(--text-color);
 }
 
 a {
@@ -55,23 +83,21 @@ a {
     color: var(--accent);
 }
 
-.focus-ring {
-    outline: 2px solid var(--accent);
-    outline-offset: 4px;
-}
-
 /* --- Component Overrides --- */
 
 /* Study mode body class for visual overrides */
 html[data-studymode="true"] .heroCard {
+    /* Mute card style in study mode */
     border: 1px solid var(--accent) !important;
     box-shadow: 0 0 0 1px var(--accent-weak);
     transform: scale(0.98);
 }
 html[data-studymode="true"] .btn {
+    /* Mute all buttons in study mode */
     opacity: 0.85;
     transform: translateY(0) !important;
     box-shadow: none !important;
+    filter: grayscale(1); /* Desaturate buttons for focus */
 }
 
 /* General button styling */
@@ -93,19 +119,66 @@ html[data-studymode="true"] .btn {
     box-shadow: 0 14px 40px rgba(0,0,0,0.45);
 }
 
-/* Button tokens: This is the gold primary button */
-.btn-primary {
+/* ------------------------------------------------ */
+/* --- BUTTON THEME STYLES (Primary: Career Gen) --- */
+/* ------------------------------------------------ */
+
+/* Dark Theme Primary Button (Gold gradient) */
+html[data-theme="dark"] .btn-primary {
     background: linear-gradient(90deg, var(--accent) 0%, #b98f2f 100%);
     border: none;
     color: var(--accent-contrast);
     box-shadow: 0 10px 30px rgba(184,143,47,0.08);
 }
-.btn-primary:hover, .btn-primary:focus {
+html[data-theme="dark"] .btn-primary:hover, html[data-theme="dark"] .btn-primary:focus {
     transform: translateY(-3px);
     box-shadow: 0 20px 48px rgba(184,143,47,0.12);
 }
 
-/* --- Removed all conflicting Bootstrap switch overrides --- */
+/* Light Theme Primary Button (Dark/Gold solid) */
+html[data-theme="light"] .btn-primary {
+    background: #1a1a1a;
+    border: 1px solid #1a1a1a;
+    color: var(--accent);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+html[data-theme="light"] .btn-primary:hover, html[data-theme="light"] .btn-primary:focus {
+    background: #000000;
+    transform: translateY(-3px);
+    box-shadow: 0 20px 48px rgba(0,0,0,0.15);
+}
+
+
+/* ------------------------------------------------ */
+/* --- BUTTON THEME STYLES (Accent: Notes Proc) ---- */
+/* ------------------------------------------------ */
+
+/* Dark Theme Accent Button (Glassy/Transparent) */
+html[data-theme="dark"] .btn.accent {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-color-dark);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+html[data-theme="dark"] .btn.accent:hover {
+    background: rgba(255,255,255,0.08);
+    transform: translateY(-2px);
+}
+
+/* Light Theme Accent Button (White with Gold Border) */
+html[data-theme="light"] .btn.accent {
+    background: #FFFFFF;
+    border: 1px solid var(--accent);
+    color: var(--text-color-light);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+html[data-theme="light"] .btn.accent:hover {
+    background: var(--bg-bottom); /* Use the light background color */
+    transform: translateY(-2px);
+}
+
+
+/* --- Other global elements/fixes --- */
 
 .page-root {
     min-height: 100vh;
