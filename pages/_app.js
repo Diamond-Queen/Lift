@@ -1,14 +1,24 @@
-import '../styles/globals.css'
-import Head from 'next/head'
+import { Html, Head, Main, NextScript } from 'next/document'
 
-export default function App({ Component, pageProps }) {
+export default function Document() {
   return (
-    <>
-  <Head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0b0b0b" />
-  </Head>
-      <Component {...pageProps} />
-    </>
+    <Html lang="en">
+      <Head>
+        {/* Preconnect for Google Fonts for faster loading */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* FIX: Consolidated all required fonts (Inter, Poppins, Great Vibes) into a single efficient link.
+          The old Bootstrap CSS link has been removed as all components now use custom/Tailwind classes.
+        */}
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;600;700;800&family=Poppins:wght@400;600;700&display=swap" 
+          rel="stylesheet" 
+        />
+      </Head>
+      <body>
+        <Main />
+        <NextScript />
+      </body>
+    </Html>
   )
 }
