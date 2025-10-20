@@ -121,7 +121,16 @@ REQUIRED JSON FORMAT:
 
     res.status(200).json({ result });
   } catch (err) {
-    console.error("API error:", err);
-    res.status(500).json({ error: err.message || "An unknown API error occurred." });
+    // --- EDITED BLOCK: ADDED DETAILED ERROR LOGGING ---
+    console.error("--- OpenAI API Call Failed ---");
+    console.error("Full error object:", err);
+    console.error("Error message:", err.message);
+
+    // Provide a more descriptive error based on common OpenAI failure modes
+    const clientErrorMessage = err.message.includes('authentication') 
+        ? "Authentication failed. Check your OpenAI API key and permissions." 
+        : err.message || "An unknown network or API error occurred.";
+        
+    res.status(500).json({ error: clientErrorMessage });
   }
 }
