@@ -5,42 +5,59 @@ import Link from "next/link";
 import styles from "../styles/Home.module.css";
 
 export default function Home() {
+  // --- State and Persistence ---
   const [theme, setTheme] = useState("dark");
   const [studyMode, setStudyMode] = useState(true);
 
+  // 1. Initial Load: Read persisted settings from localStorage
   useEffect(() => {
-    // read persisted settings
     const t = localStorage.getItem("theme");
     const s = localStorage.getItem("studyMode");
+    // NOTE: For a real app, you would use Firestore instead of localStorage for persistence.
     if (t) setTheme(t);
-    if (s) setStudyMode(s === "true");
+    // localStorage stores true/false as strings
+    if (s) setStudyMode(s === "true"); 
   }, []);
 
+  // 2. Theme Change: Apply theme attribute and save to localStorage
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
 
+  // 3. Study Mode Change: Apply attribute and save to localStorage
   useEffect(() => {
     localStorage.setItem("studyMode", studyMode ? "true" : "false");
     // expose study mode globally so CSS can react
     document.documentElement.setAttribute("data-studymode", studyMode ? "true" : "false");
   }, [studyMode]);
 
+  // --- Handlers for Theme Toggle ---
   const toggleTheme = useCallback(() => {
     setTheme((t) => (t === "dark" ? "light" : "dark"));
   }, []);
 
+  // FIX: Handler for keyboard accessibility (Enter/Space key)
   const handleThemeKeyDown = useCallback((e) => {
-    if (e.key === "Enter") toggleTheme();
+    // Also allow Space key for accessibility
+    if (e.key === "Enter" || e.key === " ") { 
+      e.preventDefault();
+      toggleTheme();
+    }
   }, [toggleTheme]);
 
+  // --- Handlers for Study Mode Toggle ---
   const toggleStudyMode = useCallback(() => {
     setStudyMode((s) => !s);
   }, []);
 
+  // FIX: Handler for keyboard accessibility (Enter/Space key)
   const handleStudyKeyDown = useCallback((e) => {
-    if (e.key === "Enter") toggleStudyMode();
+    // Also allow Space key for accessibility
+    if (e.key === "Enter" || e.key === " ") { 
+      e.preventDefault();
+      toggleStudyMode();
+    }
   }, [toggleStudyMode]);
 
   return (
@@ -67,9 +84,9 @@ export default function Home() {
           <aside className={`${styles.heroCard} ${styles.toggles}`} aria-label="Preferences">
             <h3 className={styles.pageTitle || ''}>Preferences</h3>
 
-            {/* DARK THEME TOGGLE - ORIGINAL BOOTSTRAP SWITCH */}
+            {/* DARK THEME TOGGLE - NOW USING CUSTOM CSS SWITCH */}
             <div 
-              className={`${styles.toggleRow} d-flex align-items-center justify-content-between`}
+              className={`${styles.toggleRow} flex items-center justify-between`}
               tabIndex={0}
               role="button"
               onClick={toggleTheme}
@@ -77,25 +94,15 @@ export default function Home() {
               aria-label={`Toggle dark theme, currently ${theme === 'dark' ? 'on' : 'off'}`}
             > 
               <div className={styles.toggleLabel}>Dark theme</div>
-              <div>
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    id="themeSwitch"
-                    checked={theme === 'dark'}
-                    onChange={toggleTheme}
-                    aria-checked={theme === 'dark'}
-                  />
-                  <label className="form-check-label sr-only" htmlFor="themeSwitch">Dark theme</label>
-                </div>
+              {/* Custom Switch Markup */}
+              <div className={theme === 'dark' ? `${styles.switch} ${styles.switchOn}` : styles.switch}>
+                <div className={theme === 'dark' ? `${styles.knob} ${styles.knobOn}` : styles.knob}></div>
               </div>
             </div>
 
-            {/* STUDY MODE TOGGLE - ORIGINAL BOOTSTRAP SWITCH */}
+            {/* STUDY MODE TOGGLE - NOW USING CUSTOM CSS SWITCH */}
             <div 
-              className={`${styles.toggleRow} d-flex align-items-center justify-content-between`}
+              className={`${styles.toggleRow} flex items-center justify-between`}
               tabIndex={0}
               role="button"
               onClick={toggleStudyMode}
@@ -103,19 +110,9 @@ export default function Home() {
               aria-label={`Toggle study mode, currently ${studyMode ? 'on' : 'off'}`}
             > 
               <div className={styles.toggleLabel}>Study mode</div>
-              <div>
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    id="studySwitch"
-                    checked={studyMode}
-                    onChange={toggleStudyMode}
-                    aria-checked={studyMode}
-                  />
-                  <label className="form-check-label sr-only" htmlFor="studySwitch">Study mode</label>
-                </div>
+              {/* Custom Switch Markup */}
+              <div className={studyMode ? `${styles.switch} ${styles.switchOn}` : styles.switch}>
+                <div className={studyMode ? `${styles.knob} ${styles.knobOn}` : styles.knob}></div>
               </div>
             </div>
           </aside>
