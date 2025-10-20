@@ -81,16 +81,21 @@
   color: var(--accent);
 }
 
+/* Toggle Row Styling */
 .toggleRow {
   padding: 0.75rem 0.5rem;
   cursor: pointer;
   border-radius: 8px;
   margin-bottom: 0.5rem;
   transition: background 150ms var(--easing);
+  display: flex; /* Ensure flex for alignment */
+  align-items: center; /* Vertically center items */
+  justify-content: space-between; /* Push label and switch apart */
 }
 .toggleRow:hover {
   background: rgba(255,255,255,0.05);
 }
+/* Improved focus state for the entire row (when activated by keyboard) */
 .toggleRow:focus {
   outline: none;
   box-shadow: 0 0 0 2px var(--accent-weak);
@@ -113,7 +118,7 @@
 
 /* Button colors - used to override the .btn global style */
 .primary {
-  /* This is styled using .btn-primary in globals.css for Bootstrap */
+  /* This class is now empty and relies on the global .btn-primary */
 }
 
 .accent {
@@ -123,6 +128,59 @@
 
 .accent:hover {
   background: rgba(255,255,255,0.08);
+}
+
+/* --- Custom Toggle Switch Styles --- */
+
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider (the track) */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255,255,255,0.2);
+  transition: .4s;
+  border-radius: 34px;
+}
+
+/* The slider:before (the thumb) */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: var(--muted);
+  transition: .4s;
+  border-radius: 50%;
+}
+
+/* When checked: change track color to accent */
+input:checked + .slider {
+  background-color: var(--accent);
+}
+
+/* When checked: move thumb to the right */
+input:checked + .slider:before {
+  transform: translateX(26px);
 }
 
 /* Media Queries */

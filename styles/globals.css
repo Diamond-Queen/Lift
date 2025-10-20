@@ -93,19 +93,7 @@ html[data-studymode="true"] .btn {
     box-shadow: 0 14px 40px rgba(0,0,0,0.45);
 }
 
-/* Bootstrap switch overrides to match the gold accent */
-.form-check-input:checked {
-    background-color: var(--accent) !important;
-    border-color: var(--accent) !important;
-}
-.form-check-input:checked:focus {
-    box-shadow: 0 0 0 4px rgba(212,175,55,0.12) !important;
-}
-.form-check-input {
-    transition: background-color 160ms var(--easing), border-color 160ms var(--easing), box-shadow 180ms;
-}
-
-/* Button tokens */
+/* Button tokens: This is the gold primary button */
 .btn-primary {
     background: linear-gradient(90deg, var(--accent) 0%, #b98f2f 100%);
     border: none;
@@ -117,6 +105,7 @@ html[data-studymode="true"] .btn {
     box-shadow: 0 20px 48px rgba(184,143,47,0.12);
 }
 
+/* --- Removed all conflicting Bootstrap switch overrides --- */
 
 .page-root {
     min-height: 100vh;
