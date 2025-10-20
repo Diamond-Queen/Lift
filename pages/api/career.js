@@ -1,9 +1,9 @@
 import OpenAI from "openai";
 
-// Initialize the OpenAI client
-// It will automatically look for the OPENAI_API_KEY environment variable.
+// FIX: Reverted client initialization to explicitly reference the environment variable
+// to ensure reliable authentication, matching the pattern that worked for you.
 const client = new OpenAI({
-  apiKey: "", // Leave empty; the environment will inject a key if available
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export default async function handler(req, res) {
