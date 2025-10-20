@@ -1,86 +1,128 @@
-:root {
-  /* Light Theme Defaults (used when [data-theme="light"] or no theme set) */
-  --color-primary: #6a5af9; /* Indigo-like */
-  --color-accent: #b8871f; /* Gold-like */
-  --color-text-primary: #1a1a2e; /* Very dark blue */
-  --color-text-secondary: #4a4a5c;
-  --color-background-primary: #ffffff;
-  --color-background-secondary: #f0f0f5;
-  --color-border: #ddd;
-  --color-shadow: rgba(0, 0, 0, 0.1);
+/* Global styles for Lift app - centralized stylesheet used across pages */
 
-  /* Study Mode Default (used when [data-studymode="true"]) */
-  --color-study-background: #fff8e1; /* Very light yellow/cream */
-}
-
-/* Dark Theme Overrides */
-[data-theme="dark"] {
-  --color-primary: #8f81f9; /* Lighter indigo */
-  --color-accent: #e5c100; /* Brighter gold */
-  --color-text-primary: #e6e6f2; /* Light gray */
-  --color-text-secondary: #b3b3c5;
-  --color-background-primary: #1a1a2e;
-  --color-background-secondary: #2c2c44;
-  --color-border: #444;
-  --color-shadow: rgba(255, 255, 255, 0.1);
-}
-
-/* --- Global Body & Base Styles --- */
-
-html,
-body {
-  padding: 0;
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
-  transition: background-color 0.3s, color 0.3s;
-  background-color: var(--color-background-primary);
-  color: var(--color-text-primary);
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-/* --- Theme-Specific Scrollbar (Aesthetic) --- */
-
-/* For WebKit browsers (Chrome, Safari) */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--color-background-secondary);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent);
-}
-
-/* --- Tailwind Directives (Assumed Next.js setup) --- */
+/* Import Inter and two display/script fonts for a chic look */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Poppins:ital,wght@0,400;0,600;0,700;1,400&family=Great+Vibes&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* --- Study Mode Overrides (High Contrast) --- */
-
-[data-studymode="true"] body {
-  background-color: var(--color-study-background);
-  color: #111;
+:root {
+    --bg-top: #0b0b0b; /* near-black */
+    --bg-bottom: #0f0f10; /* slightly lighter */
+    --accent: #D4AF37; /* gold-ish */
+    --accent-contrast: #0b0b0b;
+    --muted: rgba(255,255,255,0.95);
+    --glass-shadow: 0 10px 40px rgba(2,6,23,0.6);
+    --inter: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    /* alpha-ready accent fallbacks for better cross-browser compatibility */
+    --accent-rgb: 212,175,55;
+    --accent-weak: rgba(212,175,55,0.12);
+    --accent-weak-2: rgba(212,175,55,0.08);
+    --accent-border: rgba(255,255,255,0.08);
+    --font-heading: Poppins, var(--inter);
+    --font-script: 'Great Vibes', cursive;
+    --easing: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* ease-in-out */
 }
 
-[data-studymode="true"] .heroCard {
-  border: 3px solid #111 !important;
-  box-shadow: none !important;
+/* Base styles for dark mode */
+html[data-theme="dark"] {
+    /* defaults are already dark */
+}
+
+/* General resets and tokens */
+body, html {
+    font-family: var(--inter);
+    background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+    min-height: 100vh;
+    transition: background 300ms var(--easing);
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* --- Utility Classes --- */
+.text-script {
+    font-family: var(--font-script);
+    color: var(--accent);
+}
+
+.focus-ring {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+}
+
+/* --- Component Overrides --- */
+
+/* Study mode body class for visual overrides */
+html[data-studymode="true"] .heroCard {
+    border: 1px solid var(--accent) !important;
+    box-shadow: 0 0 0 1px var(--accent-weak);
+    transform: scale(0.98);
+}
+html[data-studymode="true"] .btn {
+    opacity: 0.85;
+    transform: translateY(0) !important;
+    box-shadow: none !important;
+}
+
+/* General button styling */
+.btn {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    padding: 0.75rem 1.5rem;
+    transition: all 200ms var(--easing);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 40px rgba(0,0,0,0.45);
+}
+
+/* Bootstrap switch overrides to match the gold accent */
+.form-check-input:checked {
+    background-color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+.form-check-input:checked:focus {
+    box-shadow: 0 0 0 4px rgba(212,175,55,0.12) !important;
+}
+.form-check-input {
+    transition: background-color 160ms var(--easing), border-color 160ms var(--easing), box-shadow 180ms;
+}
+
+/* Button tokens */
+.btn-primary {
+    background: linear-gradient(90deg, var(--accent) 0%, #b98f2f 100%);
+    border: none;
+    color: var(--accent-contrast);
+    box-shadow: 0 10px 30px rgba(184,143,47,0.08);
+}
+.btn-primary:hover, .btn-primary:focus {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 48px rgba(184,143,47,0.12);
+}
+
+
+.page-root {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    width: 100%;
 }

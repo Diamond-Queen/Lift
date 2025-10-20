@@ -1,235 +1,142 @@
-/* -------------------------------------------------------------------------- */
-/* HOME PAGE                                 */
-/* -------------------------------------------------------------------------- */
 .root {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem 1rem;
-    width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  color: white;
 }
 
 .hero {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    max-width: 1200px;
-    padding: 4rem 2rem;
+  text-align: center;
+  max-width: 880px;
+  width: 100%;
+  padding: 2.5rem;
+  border-radius: 14px;
+  backdrop-filter: blur(6px) saturate(120%);
+  box-shadow: 0 10px 30px rgba(2,6,23,0.35);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.04);
 }
 
 .heroContainer {
-    display: grid;
-    gap: 2rem;
-    width: 100%;
-    max-width: 900px;
-    grid-template-areas:
-        "main"
-        "toggles";
-    
-    @media (min-width: 768px) {
-        grid-template-columns: 2fr 1fr;
-        grid-template-areas: "main toggles";
-    }
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.25rem;
+  align-items: center;
 }
-
-/* -------------------------------------------------------------------------- */
-/* HERO CARD                                 */
-/* -------------------------------------------------------------------------- */
 
 .heroCard {
-    background: rgba(0,0,0,0.1);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--accent-border);
-    border-radius: 20px;
-    padding: 2.5rem;
-    box-shadow: var(--glass-shadow);
-    transition: all 400ms var(--easing);
+  padding: 1.75rem;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: 0 8px 30px rgba(2,6,23,0.5);
 }
 
-.heroCard:nth-child(1) {
-    grid-area: main;
-}
-
-.toggles {
-    grid-area: toggles;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    min-height: 200px;
-}
-
-.fadeIn {
-    animation: fadeIn 800ms var(--easing) forwards;
-    opacity: 0;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* -------------------------------------------------------------------------- */
-/* TYPOGRAPHY                                */
-/* -------------------------------------------------------------------------- */
-
-.titleWrap {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 0.5rem;
+.titleWrap { display: inline-block; position: relative; }
+.titleFlourish {
+  height: 8px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--accent), rgba(212,175,55,0.05));
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  border-radius: 9999px;
+  opacity: 0.5;
+  filter: blur(2px);
+  transform: translateY(4px);
 }
 
 .title {
-    font-family: var(--font-heading);
-    font-size: 3rem;
-    font-weight: 800;
-    line-height: 1.2;
-    margin: 0;
-    color: var(--muted);
-
-    @media (min-width: 768px) {
-        font-size: 4rem;
-    }
-}
-
-.titleFlourish {
-    width: 30px;
-    height: 30px;
-    background-color: var(--accent);
-    border-radius: 50%;
-    box-shadow: 0 0 10px var(--accent-weak);
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 0.25rem;
+  color: var(--muted);
+  text-shadow: 0 0 10px rgba(0,0,0,0.4);
 }
 
 .subtitle {
-    font-size: 1.1rem;
-    margin-bottom: 2rem;
-    color: var(--muted);
-    opacity: 0.8;
+  font-size: 1.1rem;
+  margin-top: 0;
+  margin-bottom: 2rem;
+  color: var(--muted);
+  opacity: 0.7;
+  font-weight: 400;
+}
+
+.toggles {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px) saturate(130%);
+  padding: 1.5rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: var(--glass-shadow);
+  text-align: left;
 }
 
 .pageTitle {
-    font-family: var(--font-heading);
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0;
-    border-bottom: 1px solid var(--accent-border);
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
-    color: var(--muted);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1.15rem;
+  margin-bottom: 1.25rem;
+  color: var(--accent);
 }
-
-/* -------------------------------------------------------------------------- */
-/* ACTIONS                                  */
-/* -------------------------------------------------------------------------- */
-
-.actions {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-top: 3rem;
-
-    @media (min-width: 640px) {
-        flex-direction: row;
-        gap: 1.5rem;
-    }
-}
-
-.btn {
-    /* Inherited from globals.css */
-    width: 100%;
-    @media (min-width: 640px) {
-        width: auto;
-    }
-}
-
-.primary {
-    /* Custom primary style, overriding .btn default */
-    background: linear-gradient(90deg, var(--accent) 0%, #b98f2f 100%);
-    border: none;
-    color: var(--accent-contrast);
-    box-shadow: 0 10px 30px rgba(184,143,47,0.08);
-}
-.primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 20px 48px rgba(184,143,47,0.12);
-}
-
-.accent {
-    /* Custom secondary style */
-    background: transparent;
-    border: 2px solid var(--accent);
-    color: var(--accent);
-    box-shadow: none;
-}
-.accent:hover {
-    background: var(--accent-weak-2);
-    transform: translateY(-2px);
-    box-shadow: none;
-}
-
-/* -------------------------------------------------------------------------- */
-/* TOGGLES                                  */
-/* -------------------------------------------------------------------------- */
 
 .toggleRow {
-    cursor: pointer;
-    border-radius: 12px;
-    padding: 0.75rem 1rem;
-    transition: background-color 150ms ease;
+  padding: 0.75rem 0.5rem;
+  cursor: pointer;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  transition: background 150ms var(--easing);
 }
-
-.toggleRow:focus {
-    outline: none;
-}
-
-.toggleRow:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-}
-
 .toggleRow:hover {
-    background-color: var(--accent-weak-2);
+  background: rgba(255,255,255,0.05);
+}
+.toggleRow:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-weak);
 }
 
 .toggleLabel {
-    font-family: var(--font-heading);
-    font-weight: 600;
-    color: var(--muted);
-    user-select: none;
+  font-weight: 600;
+  color: var(--muted);
 }
 
-/* * CUSTOM SWITCH STYLES (REQUIRED FOR REMOVING BOOTSTRAP)
- */
-
-.switch {
-    width: 44px;
-    height: 24px;
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    padding: 2px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    transition: background-color 200ms ease;
-    flex-shrink: 0;
+/* Button layout */
+.actions {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-top: 3rem;
+  --btn-padding-vert: 0.85rem;
+  --btn-padding-horiz: 2rem;
 }
 
-.switchOn {
-    background-color: var(--accent);
+/* Button colors - used to override the .btn global style */
+.primary {
+  /* This is styled using .btn-primary in globals.css for Bootstrap */
 }
 
-.knob {
-    width: 20px;
-    height: 20px;
-    background-color: white;
-    border-radius: 50%;
-    transition: transform 200ms ease;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+.accent {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
 }
 
-.knobOn {
-    transform: translateX(20px);
+.accent:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+/* Media Queries */
+@media (max-width: 900px) {
+  .heroContainer {
+    grid-template-columns: 1fr;
+  }
+  .toggles {
+    margin-top: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .title { font-size: 2.25rem; }
+  .actions { flex-direction: column; gap: 0.75rem; }
+  .btn { width: 100%; padding-left: 1rem; padding-right: 1rem; }
 }
