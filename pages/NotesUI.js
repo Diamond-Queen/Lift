@@ -1,10 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import JSZip from "jszip";
-// REMOVED: pdfjs-dist top-level import (handled dynamically)
-
-// Assuming your CSS path is correct now
 import styles from "../styles/Notes.module.css"; 
 
 
@@ -14,31 +11,37 @@ export default function NotesUI() {
   const [flashcards, setFlashcards] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  //  NEW STATE: Tracks the index of the currently visible (top) card
+  const [activeCardIndex, setActiveCardIndex] = useState(0); 
 
-  //  ✅ PPTX Processor (Uses JSZip)
+  // Reset active index when new flashcards are generated
+  useEffect(() => {
+    if (flashcards.length > 0) {
+      setActiveCardIndex(0);
+    }
+  }, [flashcards]);
+
+  // --- File Processors ---
+  
+  // PPTX Processor (unchanged)
   const extractTextFromPptx = async (fileBuffer) => {
     const zip = await JSZip.loadAsync(fileBuffer);
     let text = "";
-
     const slideFiles = Object.keys(zip.files).filter((f) =>
       f.match(/^ppt\/slides\/slide\d+\.xml$/)
     );
-
     for (const slidePath of slideFiles) {
       const slideXml = await zip.files[slidePath].async("text");
       const matches = [...slideXml.matchAll(/<a:t>(.*?)<\/a:t>/g)];
       matches.forEach((m) => (text += m[1] + "\n"));
     }
-
     return text.trim();
   };
 
-  //  ✅ PDF Processor (Uses dynamic pdfjs-dist import)
+  // PDF Processor (unchanged, uses .mjs path)
   const extractTextFromPdf = async (file) => {
-    // 1. Dynamic Import: Safe because it runs only after user interaction
     const pdfjsLib = await import("pdfjs-dist/build/pdf");
-    
-    // 2. Set Worker Source: Required for pdfjs-dist to work
     pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -47,18 +50,14 @@ export default function NotesUI() {
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
-      
-      const pageText = content.items
-        .map((item) => item.str)
-        .join(" ");
-
+      const pageText = content.items.map((item) => item.str).join(" ");
       text += pageText + "\n\n";
     }
-
     return text.trim();
   };
 
-  //  ✅ Handle file uploads
+  // --- Handlers ---
+  
   const handleFileChange = async (e) => {
     setError("");
     const file = e.target.files?.[0];
@@ -67,12 +66,9 @@ export default function NotesUI() {
     setLoading(true);
     try {
       let extractedText = "";
-
       if (file.name.toLowerCase().endsWith(".pptx")) {
-        const buffer = await file.arrayBuffer();
-        extractedText = await extractTextFromPptx(buffer);
+        extractedText = await extractTextFromPptx(await file.arrayBuffer());
       } else if (file.name.toLowerCase().endsWith(".pdf")) {
-        // Calls the new, robust PDF extraction function
         extractedText = await extractTextFromPdf(file);
       } else {
         throw new Error("Unsupported file type. Use PDF or PPTX.");
@@ -83,7 +79,7 @@ export default function NotesUI() {
       setInput((prev) =>
         prev ? prev.trim() + "\n\n" + extractedText.trim() : extractedText.trim()
       );
-      e.target.value = ""; // allow re-upload
+      e.target.value = "";
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to extract text. File might be protected or corrupted.");
@@ -92,10 +88,8 @@ export default function NotesUI() {
     }
   };
 
-  //  Generate summaries + flashcards (Logic remains unchanged)
   const handleGenerate = async () => {
     if (!input.trim()) {
-      // Updated error to include files again
       setError("Please add notes or upload a file first."); 
       return;
     }
@@ -130,13 +124,32 @@ export default function NotesUI() {
       setLoading(false);
     }
   };
-
+  
+  //  Modified to only flip the active card
   const toggleFlashcard = (index) => {
-    setFlashcards((prev) =>
-      prev.map((card, i) => (i === index ? { ...card, flipped: !card.flipped } : card))
-    );
+    if (index === activeCardIndex) {
+      setFlashcards((prev) =>
+        prev.map((card, i) => (i === index ? { ...card, flipped: !card.flipped } : card))
+      );
+    }
   };
 
+  // NEW: Logic for 'Next' button
+  const handleNextCard = () => {
+    if (activeCardIndex < flashcards.length - 1) {
+      setActiveCardIndex(prev => prev + 1);
+    }
+  };
+
+  //  NEW: Logic for 'Prev' button
+  const handlePrevCard = () => {
+    if (activeCardIndex > 0) {
+      setActiveCardIndex(prev => prev - 1);
+    }
+  };
+
+  // --- Rendering ---
+  
   return (
     <div className={styles.container}>
       <h1 className={styles.pageTitle}>Lift Notes</h1>
@@ -149,7 +162,6 @@ export default function NotesUI() {
         onChange={(e) => setInput(e.target.value)}
       />
 
-      {/*  ADDED: File Input and Generate Button Row */}
       <div className={styles.fileGenerateRow}>
         <label htmlFor="file-upload" className={styles.fileButton}>
           Upload File (.pdf, .pptx)
@@ -173,7 +185,7 @@ export default function NotesUI() {
 
       {error && <div className={styles.error}>{error}</div>}
 
-      {/* Results rendering remains the same */}
+      {/* Summaries rendering remains the same */}
       {summaries.length > 0 && (
         <div className={styles.resultCard}>
           <h2 className={styles.resultTitle}>Summaries</h2>
@@ -183,24 +195,66 @@ export default function NotesUI() {
         </div>
       )}
 
+      {/* Flashcards Rendering (Stacked) */}
       {flashcards.length > 0 && (
         <div className={styles.flashcardsContainer}>
           <h2 className={styles.resultTitle}>Flashcards</h2>
-          <div className={styles.flashcardsScroll}>
-            {flashcards.map((card, i) => (
-              <div
-                key={i}
-                className={`${styles.flashcard} ${card.flipped ? styles.flipped : ""}`}
-                onClick={() => toggleFlashcard(i)}
+          
+          <div className={styles.flashcardsStackWrapper}>
+            {/* Map the cards in reverse order to ensure the lowest index is visually on top initially */}
+            {flashcards.slice().reverse().map((card, i, arr) => {
+              
+              const originalIndex = flashcards.length - 1 - i;
+              let cardClass = styles.flashcard;
+              
+              if (originalIndex < activeCardIndex) {
+                // Cards already "swiped" away (moved off-screen)
+                cardClass += ` ${styles.removed}`;
+              } else if (originalIndex === activeCardIndex) {
+                // The current active card (highest visibility)
+                cardClass += card.flipped ? ` ${styles.flipped}` : '';
+              } else if (originalIndex === activeCardIndex + 1) {
+                // The card immediately behind (small offset)
+                cardClass += ` ${styles.nextCard}`;
+              } else if (originalIndex === activeCardIndex + 2) {
+                // The card two places back (smaller offset)
+                cardClass += ` ${styles.nextNextCard}`;
+              }
+
+              return (
+                <div
+                  key={originalIndex}
+                  className={cardClass}
+                  onClick={() => toggleFlashcard(originalIndex)}
+                  style={{ zIndex: originalIndex + 10 }} // Controls layer order
+                >
+                  <div className={styles.front}>
+                    <p>{card.question}</p>
+                  </div>
+                  <div className={styles.back}>
+                    <p>{card.answer}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Navigation Controls */}
+          <div className={styles.flashcardControls}>
+              <button 
+                className={styles.controlButton}
+                onClick={handlePrevCard}
+                disabled={activeCardIndex === 0}
               >
-                <div className={styles.front}>
-                  <p>{card.question}</p>
-                </div>
-                <div className={styles.back}>
-                  <p>{card.answer}</p>
-                </div>
-              </div>
-            ))}
+                {"< Prev"}
+              </button>
+              <button 
+                className={styles.controlButton}
+                onClick={handleNextCard}
+                disabled={activeCardIndex === flashcards.length - 1}
+              >
+                {"Next >"}
+              </button>
           </div>
         </div>
       )}

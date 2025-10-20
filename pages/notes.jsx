@@ -1,4 +1,5 @@
 // pages/Notes.js
+'use client';
 
 import dynamic from 'next/dynamic';
 
