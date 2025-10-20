@@ -5,56 +5,42 @@ import Link from "next/link";
 import styles from "../styles/Home.module.css";
 
 export default function Home() {
-  // --- State and Persistence ---
   const [theme, setTheme] = useState("dark");
   const [studyMode, setStudyMode] = useState(true);
 
-  // 1. Initial Load: Read persisted settings from localStorage
   useEffect(() => {
+    // read persisted settings
     const t = localStorage.getItem("theme");
     const s = localStorage.getItem("studyMode");
     if (t) setTheme(t);
-    // localStorage stores true/false as strings
-    if (s) setStudyMode(s === "true"); 
+    if (s) setStudyMode(s === "true");
   }, []);
 
-  // 2. Theme Change: Apply theme attribute and save to localStorage
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // 3. Study Mode Change: Apply attribute and save to localStorage
   useEffect(() => {
     localStorage.setItem("studyMode", studyMode ? "true" : "false");
     // expose study mode globally so CSS can react
     document.documentElement.setAttribute("data-studymode", studyMode ? "true" : "false");
   }, [studyMode]);
 
-  // --- Handlers for Theme Toggle ---
   const toggleTheme = useCallback(() => {
     setTheme((t) => (t === "dark" ? "light" : "dark"));
   }, []);
 
-  // FIX: Handler for keyboard accessibility (Enter/Space key)
   const handleThemeKeyDown = useCallback((e) => {
-    if (e.key === "Enter" || e.key === " ") { 
-      e.preventDefault();
-      toggleTheme();
-    }
+    if (e.key === "Enter") toggleTheme();
   }, [toggleTheme]);
 
-  // --- Handlers for Study Mode Toggle ---
   const toggleStudyMode = useCallback(() => {
     setStudyMode((s) => !s);
   }, []);
 
-  // FIX: Handler for keyboard accessibility (Enter/Space key)
   const handleStudyKeyDown = useCallback((e) => {
-    if (e.key === "Enter" || e.key === " ") { 
-      e.preventDefault();
-      toggleStudyMode();
-    }
+    if (e.key === "Enter") toggleStudyMode();
   }, [toggleStudyMode]);
 
   return (
@@ -81,10 +67,9 @@ export default function Home() {
           <aside className={`${styles.heroCard} ${styles.toggles}`} aria-label="Preferences">
             <h3 className={styles.pageTitle || ''}>Preferences</h3>
 
-            {/* DARK THEME TOGGLE */}
+            {/* DARK THEME TOGGLE - ORIGINAL BOOTSTRAP SWITCH */}
             <div 
-              // FIX: Replaced Bootstrap classes with Tailwind equivalents
-              className={`${styles.toggleRow} flex items-center justify-between`}
+              className={`${styles.toggleRow} d-flex align-items-center justify-content-between`}
               tabIndex={0}
               role="button"
               onClick={toggleTheme}
@@ -95,7 +80,6 @@ export default function Home() {
               <div>
                 <div className="form-check form-switch">
                   <input
-                    // The actual input is handled by the parent div's click/keydown events for better accessibility
                     className="form-check-input"
                     type="checkbox"
                     role="switch"
@@ -103,17 +87,15 @@ export default function Home() {
                     checked={theme === 'dark'}
                     onChange={toggleTheme}
                     aria-checked={theme === 'dark'}
-                    tabIndex={-1} // Remove from tab flow since parent handles focus
                   />
                   <label className="form-check-label sr-only" htmlFor="themeSwitch">Dark theme</label>
                 </div>
               </div>
             </div>
 
-            {/* STUDY MODE TOGGLE */}
+            {/* STUDY MODE TOGGLE - ORIGINAL BOOTSTRAP SWITCH */}
             <div 
-              // FIX: Replaced Bootstrap classes with Tailwind equivalents
-              className={`${styles.toggleRow} flex items-center justify-between`}
+              className={`${styles.toggleRow} d-flex align-items-center justify-content-between`}
               tabIndex={0}
               role="button"
               onClick={toggleStudyMode}
@@ -131,7 +113,6 @@ export default function Home() {
                     checked={studyMode}
                     onChange={toggleStudyMode}
                     aria-checked={studyMode}
-                    tabIndex={-1} // Remove from tab flow since parent handles focus
                   />
                   <label className="form-check-label sr-only" htmlFor="studySwitch">Study mode</label>
                 </div>
